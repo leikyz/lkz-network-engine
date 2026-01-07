@@ -60,7 +60,6 @@ void Engine::Run()
 
         accumulator += deltaTime;
 
-        // Accumuler pour la moyenne
         profilerTimer += deltaTime;
         accumulatedDeltaTime += deltaTime;
         framesCounted++;
@@ -76,7 +75,6 @@ void Engine::Run()
 
         if (profiler && profilerTimer >= 0.1f)
         {
-            // Calculer la moyenne
             float avgDeltaTime = accumulatedDeltaTime / framesCounted;
             float avgFps = (avgDeltaTime > 0.0f) ? (1.0f / avgDeltaTime) : 0.0f;
 
@@ -89,7 +87,6 @@ void Engine::Run()
             msg.serialize(s);
             profiler->Broadcast(s.getBuffer());
 
-            // Reset des compteurs
             profilerTimer = 0.0f;
             framesCounted = 0;
             accumulatedDeltaTime = 0.0f;

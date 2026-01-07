@@ -237,20 +237,16 @@ Vector3 World::getRandomNavMeshPoint(dtNavMeshQuery* navQuery)
 	float randomPt[3];
 	dtStatus status;
 
-	// TENTATIVE 1 : Recherche globale
 	status = navQuery->findRandomPoint(m_filter, frand, &randomRef, randomPt);
 
 	if (dtStatusSucceed(status))
 	{
 		return { randomPt[0], randomPt[1], randomPt[2] };
 	}
-
-	// SI ECHEC 1 : On essaie de trouver le polygone le plus proche de (0,0,0)
-	// Cela permet de "snapper" vers la zone bleue la plus proche si le spawn est dans le vide.
 	Logger::Log("getRandomNavMeshPoint: Global search failed, trying to find nearest poly...", LogType::Warning);
 
-	const float center[3] = { 0.0f, 0.0f, 0.0f }; // On cherche autour de l'origine
-	const float extents[3] = { 50.0f, 50.0f, 50.0f }; // Rayon de recherche large (50 unités)
+	const float center[3] = { 0.0f, 0.0f, 0.0f }; 
+	const float extents[3] = { 50.0f, 50.0f, 50.0f }; 
 	dtPolyRef nearestRef = 0;
 	float nearestPt[3];
 
@@ -258,8 +254,6 @@ Vector3 World::getRandomNavMeshPoint(dtNavMeshQuery* navQuery)
 
 	if (dtStatusSucceed(status) && nearestRef != 0)
 	{
-		// On a trouvé un morceau de navmesh valide (bleu) !
-		// Maintenant on cherche un point aléatoire SUR ce polygone ou autour.
 		status = navQuery->findRandomPointAroundCircle(nearestRef, nearestPt, 10.0f, m_filter, frand, &randomRef, randomPt);
 
 		if (dtStatusSucceed(status))
@@ -268,7 +262,6 @@ Vector3 World::getRandomNavMeshPoint(dtNavMeshQuery* navQuery)
 		}
 		else
 		{
-			// Si le random échoue encore, on retourne le point le plus proche trouvé (le bord du navmesh)
 			return { nearestPt[0], nearestPt[1], nearestPt[2] };
 		}
 	}
