@@ -17,9 +17,6 @@ struct Message
 
     virtual ~Message() = default;
 
-  #include <string>
-#include <typeinfo>
-
     virtual const char* getClassName() const
     {
         return typeid(*this).name() + 7; 
