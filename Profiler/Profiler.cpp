@@ -9,8 +9,8 @@
 #include <GLES2/gl2.h>
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
-static const int PROFILER_PORT = 5001;
-static const char* SERVER_IP = "104.194.157.137";
+static const int PROFILER_PORT = 5555;
+static const char* SERVER_IP = "127.0.0.1";
 
 #include "include/ProfilerClient.h"
 #include "include/Core/Manager/ProfilerState.h"

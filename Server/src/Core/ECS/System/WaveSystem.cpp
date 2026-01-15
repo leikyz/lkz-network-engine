@@ -13,7 +13,7 @@
 
 void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
 {
-    for (auto& [entity, waveComponent] : components.waves)
+    /*for (auto& [entity, waveComponent] : components.waves)
     {
 		Logger::Log("Zombie to spawn " + std::to_string(waveComponent.zombiesAlive), LogType::Debug);
 
@@ -77,7 +77,7 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
                 }
             }
         }
-    }
+    }*/
 }
 
 void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
@@ -149,7 +149,7 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
                 }
             }
 
-            lobby->addEntity(&entity);
+       /*     lobby->addEntity(&entity);*/
 
             CreateEntityMessage createEntityMsg;
 
@@ -163,7 +163,7 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
             createEntityMsg.serialize(serializer);
 
             server->SendToMultiple(
-                lobby->clients,
+                LobbyManager::getClientsInLobby(lobby->id),
                 serializer.getBuffer(),
                 createEntityMsg.getClassName()
             );

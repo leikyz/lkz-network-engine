@@ -1,65 +1,94 @@
 ﻿#include "LKZ/Core/Manager/ClientManager.h"
+#include "LKZ/Core/Manager/LobbyManager.h"
 
-std::unordered_map<std::string, Client*> ClientManager::clients;
-std::mutex ClientManager::clientsMutex;
-std::atomic<uint32_t> ClientManager::nextId{ 1 }; // For avoiding multithreading issues
+std::unordered_map<std::string, std::unique_ptr<Client>> ClientManager::m_clients;
+std::mutex ClientManager::m_clientsMutex;
+std::atomic<uint32_t> ClientManager::m_nextId{ 1 }; // For avoiding multithreading issues
 
-/**
- * @brief Adds a new client to the manager if it doesn't already exist safe.
- * @param clientAddr The address of the client to add.
- */
 
 void ClientManager::addClient(const sockaddr_in& clientAddr)
 {
-    std::lock_guard<std::mutex> lock(clientsMutex);
-
     std::string key = getClientKey(clientAddr);
-    if (clients.find(key) == clients.end())
-    {
-        clients[key] = new Client(nextId.fetch_add(1), clientAddr, key); 
-    }
-}
+    uint32_t id = m_nextId.fetch_add(1);
 
-/**
- * @brief Removes a client from the manager by its address safe.
- * @param clientAddr The address of the client to remove.
- */
+    auto client = std::make_unique<Client>(id, clientAddr, key);
+
+	// Thread-safe insertion into the clients map
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    m_clients.try_emplace(key, std::move(client));
+}
 
 void ClientManager::removeClient(const sockaddr_in& clientAddr)
 {
-    std::lock_guard<std::mutex> lock(clientsMutex);
-
     std::string key = getClientKey(clientAddr);
-    auto it = clients.find(key);
-    if (it != clients.end())
+    std::unique_ptr<Client> clientToDelete;
+
+	// Lock the mutex only for the duration of the map modification
     {
-        delete it->second;
-        clients.erase(it);
+        std::lock_guard<std::mutex> lock(m_clientsMutex);
+
+       /* LobbyManager::getLobby*/
+		// Extract the node to remove it safely
+        auto node = m_clients.extract(key);
+
+        if (!node.empty())
+            clientToDelete = std::move(node.mapped());
     }
 }
+
 Client* ClientManager::getClientByAddress(const sockaddr_in& clientAddr)
 {
-    std::lock_guard<std::mutex> lock(clientsMutex);
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
 
     std::string key = getClientKey(clientAddr);
-    auto it = clients.find(key);
-    return (it != clients.end()) ? it->second : nullptr;
+    auto it = m_clients.find(key);
+
+    if (it != m_clients.end())
+    {
+        return it->second.get();
+    }
+
+    return nullptr;
 }
+
+
+// Need to rework this to be more efficient
+
+Client* ClientManager::getClientById(const uint32_t clientId)
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+
+    for (auto& pair : m_clients)
+    {
+        if (pair.second->id == clientId)
+        {
+            return pair.second.get(); 
+        }
+    }
+
+    return nullptr; 
+}
+
 
 std::vector<Client*> ClientManager::getClients()
 {
-    std::lock_guard<std::mutex> lock(clientsMutex);
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
 
     std::vector<Client*> clientList;
-    for (auto& pair : clients)
+
+    clientList.reserve(m_clients.size());
+
+    for (auto& pair : m_clients)
     {
-        clientList.push_back(pair.second);
+        clientList.push_back(pair.second.get());
     }
+
     return clientList;
 }
 
 std::string ClientManager::getClientKey(const sockaddr_in& clientAddr)
 {
+	// Convert IP address to string
     char ipStr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
     return std::string(ipStr) + ":" + std::to_string(ntohs(clientAddr.sin_port));

@@ -26,24 +26,24 @@ namespace Constants
     inline constexpr float ZOMBIE_WAVE_MULTIPLIER = 1.2f;
     // ----- Crowd Inialization -----
 
-    inline constexpr int MAX_AGENTS = 1000;             // Maximum number of agents the crowd manager can handle at once.
+    inline constexpr int MAX_AGENTS = 5000;             // Maximum number of agents the crowd manager can handle at once.
     inline constexpr float MAX_AGENT_RADIUS = 0.5f;    // The maximum radius any agent in the crowd can have. This is used internally by DetourCrowd.
 
 	// ----- Default Agent Settings ----- must match those used in World.cpp and Unity navmesh setup
 
-    inline constexpr float AGENT_RADIUS = 0.05f;       // The physical radius of a typical AI agent.
+    inline constexpr float AGENT_RADIUS = 0.5f;       // The physical radius of a typical AI agent.
     inline constexpr float AGENT_HEIGHT = 1.5f;      // The height of an agent (e.g., for humanoid navigation).
     inline constexpr float AGENT_MAX_CLIMB = 1.5f;
     inline constexpr float AGENT_MAX_SLOPE = 60.0f; // in degrees
     inline constexpr float AGENT_MAX_ACCELERATION = 1.0f; // Maximum acceleration allowed for an agent.
-    inline constexpr float AGENT_MAX_SPEED = 0.4f;       // Maximum movement speed of an agent (units per second).
+    inline constexpr float AGENT_MAX_SPEED = 3.0f;       // Maximum movement speed of an agent (units per second).
 
     // ----- Avoidance & Collision -----
 
     inline constexpr float AGENT_COLLISION_QUERY_RANGE = AGENT_RADIUS * 4.0f;      // Distance around the agent used to query nearby agents for collision avoidance.
     inline constexpr float AGENT_PATH_OPTIMIZATION_RANGE = AGENT_RADIUS * 15.0f;  // How far the agent will look ahead to optimize its path (avoid walls, etc.).
     inline constexpr int AGENT_OBSTACLE_AVOIDANCE_TYPE = 3;                      // Quality level of obstacle avoidance: 0 = Low, 1 = Medium, 2 = Good, 3 = High (default: 3)
-    inline constexpr float AGENT_SEPARATION_WEIGHT = 1.0f;                      // How strongly agents try to stay away from each other.
+    inline constexpr float AGENT_SEPARATION_WEIGHT = 0.1f;                      // How strongly agents try to stay away from each other.
 
     // ----- Update Agent Flags -----
         
@@ -75,15 +75,17 @@ namespace Constants
 	inline constexpr float AI_STOP_DISTANCE = 2.0f; // Distance at which AI stops moving towards target.
 	inline constexpr float AI_STOP_DISTANCE_SQ = AI_STOP_DISTANCE * AI_STOP_DISTANCE; // Squared stop distance for efficiency.
 
-	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 1.80878f, 0.0f, 4.4944f }; // Default spawn position for the first player.
-	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { -1.506999, 0.0f, 3.0644 }; // Default spawn position for the second player.
+	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 2.5, 2.35f, 1.5f }; // Default spawn position for the first player.
+	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { 2.0, 2.35f, 1.5f }; // Default spawn position for the second player.
 	inline constexpr Vector3 THIRD_PLAYER_SPAWN_POSITION = { -1.247f, 0.0f, -1.2856f }; // Default spawn position for the third player.
 	inline constexpr Vector3 FOURTH_PLAYER_SPAWN_POSITION = { 2.793f, 0.0f, -1.7856f }; // Default spawn position for the fourth player
+
+    inline constexpr Vector3 ZOMBIE_TARGET_POSITION = { 0.24f, 0.0f, 7.06f };
     
-    inline constexpr Vector3 FIRST_ZOMBIE_SPAWN_POSITION = { 1.82f, 0, 43.17f }; // Default spawn position for the fourth player..
-    inline constexpr Vector3 SECOND_ZOMBIE_SPAWN_POSITION = { -2.87, 0, 29.44f };
-    inline constexpr Vector3 THIRD_ZOMBIE_SPAWN_POSITION = { -20.22, 0, 3.85f };
-    inline constexpr Vector3 FOURTH_ZOMBIE_SPAWN_POSITION = { -2.51, 0, 28.66f };
+    inline constexpr Vector3 FIRST_ZOMBIE_SPAWN_POSITION = { 50.1f, 0, 9.9f }; // Default spawn position for the fourth player..
+    inline constexpr Vector3 SECOND_ZOMBIE_SPAWN_POSITION = { 63.6f, 0, 31.3f };
+    inline constexpr Vector3 THIRD_ZOMBIE_SPAWN_POSITION = { 148.4f, 0, 21.2f };
+    inline constexpr Vector3 FOURTH_ZOMBIE_SPAWN_POSITION = { 29.1f, 0, 4.4f };
 }
 
 #endif // CONSTANTS_HPP

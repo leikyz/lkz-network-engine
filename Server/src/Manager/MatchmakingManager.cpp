@@ -69,16 +69,18 @@ void MatchmakingManager::ProcessMatchmaking()
         }
 
         client->lobbyId = lobby->id;
-        lobby->addClient(client);
-        client->positionInLobby = static_cast<uint8_t>(lobby->clients.size() - 1);
+        lobby->addClient(client->id);
+        client->positionInLobby = static_cast<uint8_t>(lobby->clientIds.size());
+
+		std::cout << "[MATCHMAKING] Client " << client->ipAddress << " added to lobby " << lobby->id << " at position " << static_cast<int>(client->positionInLobby) << std::endl;
 
         std::vector<uint8_t> allPositions;
-        for (Client* c : lobby->clients) {
+        for (Client* c : LobbyManager::getClientsInLobby(lobby->id)) {
             if (!c) continue;
             allPositions.push_back(c->positionInLobby);
         }
 
-        for (Client* c : lobby->clients) {
+        for (Client* c : LobbyManager::getClientsInLobby(lobby->id)) {
             if (!c) continue;
 
             if (c->isReady) {
@@ -94,7 +96,7 @@ void MatchmakingManager::ProcessMatchmaking()
             }
         }
 
-        for (Client* c : lobby->clients) {
+        for (Client* c : LobbyManager::getClientsInLobby(lobby->id)) {
             if (!c) continue;
 
             UpdateLobbyMessage updateLobbyMsg;

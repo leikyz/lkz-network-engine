@@ -44,7 +44,7 @@ void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr)
     Serializer serializer;
     serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(lobby->clients, serializer.getBuffer(), getClassName());
+    Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), serializer.getBuffer(), getClassName());
 
 	lobby->gameLoaded = true;
 	// first wave start
@@ -53,7 +53,7 @@ void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr)
     changeWaveMsg.serialize(serializer);
 
     Engine::Instance().Server()->SendToMultiple(
-        lobby->clients,
+        LobbyManager::getClientsInLobby(lobby->id),
         serializer.getBuffer(),
         changeWaveMsg.getClassName());
 }

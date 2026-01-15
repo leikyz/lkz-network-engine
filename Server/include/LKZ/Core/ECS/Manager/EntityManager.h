@@ -4,19 +4,20 @@
 #include <queue>
 #include <unordered_map>
 
-class EntityManager {
-    Entity nextID = 1; // start at 1, 0 is invalid
-    std::queue<Entity> freeIDs;
-
-    std::unordered_map<Entity, Lobby*> entityLobbyMap;
-
+// Manager for entity creation, destruction, and tracking
+class EntityManager 
+{
 public:
-    static EntityManager& Instance() {
+    static EntityManager& Instance() 
+    {
         static EntityManager instance;
         return instance;
     }
 
+    Entity nextID = 1; // start at 1, 0 is invalid
+
     void SetLastSequenceId(Entity entity, uint32_t sequenceId);
+
     uint32_t GetLastSequenceId(Entity entity) const;
 
     Entity CreateEntity(EntitySuperType type, ComponentManager& components, Lobby* lobby);
@@ -28,9 +29,22 @@ public:
     Entity GetEntityById(uint16_t entityId, Lobby* lobby);
 
 private:
+	// Private constructor for singleton pattern
     EntityManager() = default;
+
+	// Delete copy constructor and assignment operator
     EntityManager(const EntityManager&) = delete;
+
+	// Delete assignment operator
     EntityManager& operator=(const EntityManager&) = delete;
-    std::unordered_map<Entity, uint32_t> lastSequenceIds;
+
+	// Maps to track last sequence IDs and entity-lobby associations
+    std::unordered_map<Entity, uint32_t> m_lastSequenceIds;
+
+	// Queue to manage reusable entity IDs
+    std::queue<Entity> m_freeIDs;
+
+	// Map to associate entities with their respective lobbies
+    std::unordered_map<Entity, Lobby*> m_entityLobbyMap;
 };
 

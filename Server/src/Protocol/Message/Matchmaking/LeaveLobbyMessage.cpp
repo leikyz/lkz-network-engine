@@ -28,7 +28,7 @@ void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
     uint8_t removedPosition = currentClient->positionInLobby;
     if (lobby)
     {
-        for (Client* c : lobby->clients)
+        for (Client* c : LobbyManager::getClientsInLobby(lobby->id))
         {
             if (!c) continue;
 
@@ -40,14 +40,14 @@ void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
                 changeReadyMsg.positionInLobby = c->positionInLobby;
                 Serializer s;
                 std::vector<uint8_t> buf = changeReadyMsg.serialize(s);
-                Engine::Instance().Server()->SendToMultiple(lobby->clients, buf, getClassName());
+                Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), buf, getClassName());
               
             }
         }
 
-        lobby->removeClient(currentClient);
+        lobby->removeClient(currentClient->id);
 
-        if (lobby->clients.empty())
+        if (lobby->clientIds.empty())
         {
             LobbyManager::removeLobby(lobby->id);
         }
@@ -55,7 +55,7 @@ void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
         {
             std::vector<uint8_t> allPositions;
 
-            for (Client* c : lobby->clients)
+            for (Client* c : LobbyManager::getClientsInLobby(lobby->id))
             {
                 if (!c) continue;
                 if (c->positionInLobby > removedPosition)
@@ -68,7 +68,7 @@ void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
 
          
 
-            for (Client* c : lobby->clients)
+            for (Client* c : LobbyManager::getClientsInLobby(lobby->id))
             {
                 if (!c) continue;
 

@@ -69,43 +69,38 @@ void World::initialize()
 
 void World::UpdateCrowd(double deltaTime)
 {
-	if (crowd)
+	if (!crowd) return;
+
+	crowd->update(static_cast<float>(deltaTime), nullptr);
+
+	const int agentCount = crowd->getAgentCount();
+	for (int i = 0; i < agentCount; ++i)
 	{
-		crowd->update(static_cast<float>(deltaTime), nullptr);
+		const dtCrowdAgent* agent = crowd->getAgent(i);
+		if (!agent->active || !agent->params.userData) continue;
 
-		auto& components = ComponentManager::Instance();
-		const int agentCount = crowd->getAgentCount();
+		// Get the associated AIComponent
+		AIComponent* ai = static_cast<AIComponent*>(agent->params.userData);
 
-		for (int i = 0; i < agentCount; ++i)
+		// 1. Sync Position
+		if (ai->posPtr) {
+			ai->posPtr->position.x = agent->npos[0];
+			ai->posPtr->position.y = agent->npos[1];
+			ai->posPtr->position.z = agent->npos[2];
+		}
+
+		// Optimized sync rotation based on velocity
+		if (ai->rotPtr) 
 		{
-			const dtCrowdAgent* agent = crowd->getAgent(i);
-			if (!agent->active) continue;
-
-			Entity entity = (Entity)((uintptr_t)agent->params.userData);
-			auto posIt = components.positions.find(entity);
-			if (posIt == components.positions.end()) continue;
-
-			// Sync Position
-			auto& posComp = posIt->second.position;
-			posComp.x = agent->npos[0];
-			posComp.y = agent->npos[1];
-			posComp.z = agent->npos[2];
-
-			// Sync Rotation
-			auto rotIt = components.rotations.find(entity);
-			if (rotIt != components.rotations.end())
+			float velSq = agent->vel[0] * agent->vel[0] + agent->vel[2] * agent->vel[2];
+			if (velSq > 0.01f) 
 			{
-				float velLengthSq = agent->vel[0] * agent->vel[0] + agent->vel[2] * agent->vel[2];
-				if (velLengthSq > 0.01f)
-				{
-					float yaw = std::atan2(agent->vel[0], agent->vel[2]) * (180.0f / Constants::PI);
-					rotIt->second.rotation.y = yaw;
-				}
-			}		
+				float yaw = std::atan2(agent->vel[0], agent->vel[2]) * (180.0f / Constants::PI);
+				ai->rotPtr->rotation.y = yaw;
+			}
 		}
 	}
 }
-		
 
 
 void World::update(double deltaTime)

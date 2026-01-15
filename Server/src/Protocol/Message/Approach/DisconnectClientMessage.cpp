@@ -28,50 +28,50 @@ void DisconnectClientMessage::process(const sockaddr_in& senderAddr)
     Client* currentClient = ClientManager::getClientByAddress(senderAddr);
     if (!currentClient)
     {
-		Logger::Log("Client not found.", LogType::Warning);
+        Logger::Log("Disconnect: Client not found", LogType::Warning);
         return;
     }
 
-    if (currentClient->lobbyId != -1)
+    uint32_t clientId = currentClient->id;
+    int lobbyId = currentClient->lobbyId;
+    uint8_t removedPosition = currentClient->positionInLobby;
+
+    if (lobbyId != -1)
     {
-        Lobby* lobby = LobbyManager::getLobby(currentClient->lobbyId);
+        Lobby* lobby = LobbyManager::getLobby(lobbyId);
         if (lobby)
         {
-            uint8_t removedPosition = currentClient->positionInLobby;
-            lobby->removeClient(currentClient);
-            currentClient->lobbyId = -1;
+            lobby->removeClient(clientId);
 
-            if (lobby->clients.empty())
+            if (lobby->getClientCount() == 0)
             {
-                LobbyManager::removeLobby(lobby->id);
+                LobbyManager::removeLobby(lobbyId);
             }
             else
             {
-                uint8_t pos = 1;
-                for (Client* c : lobby->clients)
+                std::vector<Client*> remainingClients = LobbyManager::getClientsInLobby(lobbyId);
+
+                for (Client* c : remainingClients)
                 {
-                    if (!c) continue;
                     if (c->positionInLobby > removedPosition)
                     {
-                        c->positionInLobby--; 
+                        c->positionInLobby--;
                     }
                 }
 
                 LeaveLobbyMessage leaveLobbyMsg;
                 leaveLobbyMsg.positionInLobby = removedPosition;
+
                 Serializer serializer;
                 std::vector<uint8_t> buffer = leaveLobbyMsg.serialize(serializer);
 
-                std::vector<Client*> clientsCopy(lobby->clients.begin(), lobby->clients.end());
-                for (Client* c : clientsCopy)
+                for (Client* c : remainingClients)
                 {
-                    if (!c) continue;
-                    Engine::Instance().Server()->Send(c->address, buffer, getClassName());
+                    Engine::Instance().Server()->Send(c->address, buffer, "LeaveLobbyMessage");
                 }
             }
         }
     }
-
     ClientManager::removeClient(senderAddr);
 }
 

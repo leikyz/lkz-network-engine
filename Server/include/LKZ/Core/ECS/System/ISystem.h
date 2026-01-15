@@ -1,7 +1,10 @@
 #pragma once
 #include "LKZ/Core/ECS/Manager/ComponentManager.h"
 
-class ISystem {
+// Interface for all systems in the ECS architecture
+
+class ISystem 
+{
 public:
     virtual ~ISystem() = default;
 

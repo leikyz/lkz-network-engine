@@ -3,11 +3,8 @@
 #include "LKZ/Core/ECS/Component/Component.h"
 #include <unordered_map>
 
-/**
- * @brief Stores all components for entities.
- * Provides access to component data in the ECS architecture.
- */
-class ComponentManager
+// Manager for all components in the ECS architecture
+class ComponentManager 
 {
 public:
 	// Singleton instance

@@ -5,7 +5,10 @@
 #include <cstdint>
 #include <stdexcept>
 
-class Deserializer {
+// Little Endian Deserializer
+
+class Deserializer 
+{
 private:
    
     size_t m_position = 0;
@@ -13,6 +16,9 @@ private:
 public:
     explicit Deserializer(const std::vector<uint8_t>& buf) : m_buffer(buf) {}
     const std::vector<uint8_t>& m_buffer;
+
+
+	// Reads an integer (4 bytes) from the buffer
     int readInt() 
     {
         if (m_position + 4 > m_buffer.size()) {
@@ -28,6 +34,7 @@ public:
         return value;
     }
 
+	// Reads a float (4 bytes) from the buffer
     float readFloat()
     {
         if (m_position + sizeof(float) > m_buffer.size()) {
@@ -35,11 +42,14 @@ public:
         }
 
         float value;
+
+		// Use memcpy to avoid strict aliasing issues
         std::memcpy(&value, &m_buffer[m_position], sizeof(float));
         m_position += sizeof(float);
         return value;
     }
 
+	// Reads a boolean (1 byte) from the buffer
     bool readBool()
     {
         if (m_position + 1 > m_buffer.size()) {
@@ -51,7 +61,8 @@ public:
         return value;
     }
 
-    uint16_t readUInt16() // short
+	// Reads an unsigned short (2 bytes) from the buffer
+    uint16_t readUInt16()
     {
         if (m_position + 2 > m_buffer.size()) {
             throw std::out_of_range("Buffer overflow in readUInt16");
@@ -63,6 +74,7 @@ public:
         return value;
     }
 
+	// Reads an unsigned byte (1 byte) from the buffer
     uint8_t readByte()
     {
         if (m_position + 1 > m_buffer.size()) {

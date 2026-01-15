@@ -36,7 +36,7 @@ void PlayerShootingMessage::process(const sockaddr_in& senderAddr)
     Lobby* lobby = LobbyManager::getLobby(lobbyId);
 
     Engine::Instance().Server()->SendToMultiple(
-        lobby->clients,
+        LobbyManager::getClientsInLobby(lobby->id),
         serializer.getBuffer(),
         getClassName(),
         ClientManager::getClientByAddress(senderAddr));

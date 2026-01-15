@@ -64,6 +64,7 @@ void EventManager::BindEvents()
 template<typename T>
 void EventManager::registerHandler(uint8_t id) 
 {
+
     messageHandlers[id] = &handleMessage<T>;
 }
 
@@ -73,14 +74,13 @@ void EventManager::processMessage(std::vector<uint8_t>& buffer, const sockaddr_i
         return;
     }
 
+	// The first byte is the message ID
     uint8_t id = buffer[0]; 
 
     if (!messageHandlers[id]) {
         std::cout << "failed: " << static_cast<int>(id) << std::endl;
         return;
     }
-
-
     buffer.erase(buffer.begin()); 
 
     messageHandlers[id](buffer, senderAddr);
@@ -100,6 +100,7 @@ void EventManager::handleMessage(const std::vector<uint8_t>& buffer, const socka
     // added +1 because we removed 1 byte before handled event (ID)
     Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, buffer.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);
 
+	// Parse and process the message
     msg.deserialize(deserializer);
     msg.process(senderAddr);
 }

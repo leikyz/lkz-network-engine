@@ -169,7 +169,7 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
             moveMsg.serialize(s);
 
             Engine::Instance().Server()->SendToMultiple(
-                lobby->clients, 
+                LobbyManager::getClientsInLobby(lobby->id),
                 s.getBuffer(),
                 moveMsg.getClassName(),
                 ownerClient);

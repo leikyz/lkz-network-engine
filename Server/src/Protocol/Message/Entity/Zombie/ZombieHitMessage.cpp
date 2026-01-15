@@ -51,5 +51,5 @@ void ZombieHitMessage::process(const sockaddr_in& senderAddr)
     Serializer serializer;
     serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(lobby->clients, serializer.getBuffer(), getClassName(), client);
+    Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), serializer.getBuffer(), getClassName(), client);
 }

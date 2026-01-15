@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <ctime>
 
-// Nouveaux includes nécessaires
 #include "LKZ/Core/Threading/CommandQueue.h"
 #include "LKZ/Core/Threading/ThreadManager.h"
 #include "LKZ/Core/ECS/Manager/EntityManager.h"
@@ -18,6 +17,7 @@
 
 // Include for Vector3
 #include "LKZ/Simulation/Math/Vector.h" 
+#include <iostream>
 
 RequestCreateEntityMessage::RequestCreateEntityMessage() {}
 
@@ -101,6 +101,8 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                 break;
             }
 
+			std::cout << "Position in lobby: " << client->positionInLobby << std::endl;
+
             components.AddComponent(entity, PositionComponent{ playerSpawnPos });
             components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
 
@@ -113,7 +115,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
             createEntityMsg.posY = playerSpawnPos.y;
             createEntityMsg.posZ = playerSpawnPos.z;
 
-            lobby->addEntity(&entity);
+           /* lobby->addEntity(&entity);*/
 
             Serializer serializer;
             createEntityMsg.serialize(serializer);
@@ -123,7 +125,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
             createEntityMsg.entityTypeId = (int)EntityType::PlayerSynced1;
             createEntityMsg.serialize(serializer);
 
-            server->SendToMultiple(lobby->clients,
+            server->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id),
                 serializer.getBuffer(),
                 createEntityMsg.getClassName(),
                 client);
@@ -136,8 +138,25 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
 
             World& world = Engine::Instance().GetWorld();
             dtNavMeshQuery* simQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
-        /*    Vector3 randomSpawnPoint = world.getRandomNavMeshPoint(simQuery);*/
-			Vector3 randomSpawnPoint = Constants::FIRST_PLAYER_SPAWN_POSITION;
+
+            int randomChoice = (rand() % 4) + 1; 
+
+            /*Vector3 randomSpawnPoint;
+
+            if (randomChoice == 1) {
+                randomSpawnPoint = Constants::FIRST_ZOMBIE_SPAWN_POSITION;
+            }
+            else if (randomChoice == 2) {
+                randomSpawnPoint = Constants::SECOND_ZOMBIE_SPAWN_POSITION;
+            }
+            else if (randomChoice == 3) {
+                randomSpawnPoint = Constants::THIRD_ZOMBIE_SPAWN_POSITION;
+            }
+            else {
+                randomSpawnPoint = Constants::FOURTH_ZOMBIE_SPAWN_POSITION;
+            }*/
+            Vector3 randomSpawnPoint = world.getRandomNavMeshPoint(simQuery);
+			/*Vector3 randomSpawnPoint = Constants::FIRST_PLAYER_SPAWN_POSITION;*/
             CommandQueue::Instance().Push([=]() {
 
                 auto& components = ComponentManager::Instance();
@@ -155,6 +174,8 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                     std::to_string(randomSpawnPoint.y) + ", " +
                     std::to_string(randomSpawnPoint.z) + ")", LogType::Info);
 
+
+
                 float initialRepathDelay = ((rand() % 100) / 100.0f) * 2.0f;
 
                 Vector3 initialTarget = world.getRandomNavMeshPoint(simQuery);
@@ -164,14 +185,20 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                     initialTarget,     
                     initialRepathDelay,
                     -1,
-                    0.0f
+                    0.0f,
                     });
+
+                auto& aiComp = components.ai[entity];
+                aiComp.posPtr = &components.positions[entity];
+                aiComp.rotPtr = &components.rotations[entity];
 
                 dtCrowd* crowd = world.getCrowd();
                 if (crowd)
                 {
                     dtCrowdAgentParams params;
                     memset(&params, 0, sizeof(params));
+
+                  
 
                     params.radius = Constants::AGENT_RADIUS;
                     params.height = Constants::AGENT_HEIGHT;
@@ -186,7 +213,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                     params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
                     params.updateFlags = Constants::AGENT_UPDATE_FLAGS;
 
-                    params.userData = (void*)((uintptr_t)entity);
+                    params.userData = &aiComp;
 
                     float spawnPos[3] = { randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z };
                     int agentIdx = crowd->addAgent(spawnPos, &params);
@@ -208,13 +235,13 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                 createEntityMsg.posY = randomSpawnPoint.y;
                 createEntityMsg.posZ = randomSpawnPoint.z;
 
-                lobby->addEntity(&entity);
+                /*lobby->addEntity(&entity);*/
 
                 Serializer serializer;
                 createEntityMsg.serialize(serializer);
 
                 server->SendToMultiple(
-                    lobby->clients,
+                    LobbyManager::getClientsInLobby(lobby->id),
                     serializer.getBuffer(),
                     createEntityMsg.getClassName()
                 );

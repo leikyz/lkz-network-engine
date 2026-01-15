@@ -88,7 +88,7 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr)
     serialize(serializer);
 
     Engine::Instance().Server()->SendToMultiple(
-        lobby->clients,
+        LobbyManager::getClientsInLobby(lobby->id),
         serializer.getBuffer(),
         getClassName(),
         client);
