@@ -43,7 +43,7 @@ namespace Constants
     inline constexpr float AGENT_COLLISION_QUERY_RANGE = AGENT_RADIUS * 4.0f;      // Distance around the agent used to query nearby agents for collision avoidance.
     inline constexpr float AGENT_PATH_OPTIMIZATION_RANGE = AGENT_RADIUS * 15.0f;  // How far the agent will look ahead to optimize its path (avoid walls, etc.).
     inline constexpr int AGENT_OBSTACLE_AVOIDANCE_TYPE = 3;                      // Quality level of obstacle avoidance: 0 = Low, 1 = Medium, 2 = Good, 3 = High (default: 3)
-    inline constexpr float AGENT_SEPARATION_WEIGHT = 0.1f;                      // How strongly agents try to stay away from each other.
+    inline constexpr float AGENT_SEPARATION_WEIGHT = 0.3f;                      // How strongly agents try to stay away from each other.
 
     // ----- Update Agent Flags -----
         

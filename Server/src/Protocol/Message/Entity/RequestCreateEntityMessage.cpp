@@ -211,7 +211,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                     params.queryFilterType = Constants::AGENT_QUERY_FILTER_TYPE;
                     params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
                     params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
-                    params.updateFlags = Constants::AGENT_UPDATE_FLAGS;
+                    params.updateFlags = Constants::AGENT_UPDATE_FLAGS & ~DT_CROWD_OBSTACLE_AVOIDANCE;
 
                     params.userData = &aiComp;
 
