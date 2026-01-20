@@ -120,7 +120,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\lib\RecastNavigation\DebugUtils\Include;C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\lib\RecastNavigation\Recast\Include;C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\lib\RecastNavigation\DetourTileCache\Include;C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\lib\RecastNavigation\DetourCrowd\Include;C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\lib\RecastNavigation\Detour\Include;C:\Users\Matéo\source\repos\leikyz\lkz-network-dead-protocol\Server\include;$(SolutionDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

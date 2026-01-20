@@ -47,7 +47,6 @@ void EventManager::BindEvents()
     EventManager::registerHandler<PlayerInputMessage>(10);
     EventManager::registerHandler<MoveEntityMessage>(11);
     EventManager::registerHandler<RotateEntityMessage>(12);
-    EventManager::registerHandler<RotateEntityMessage>(12);
     EventManager::registerHandler<LastEntityPositionMessage>(13);
     EventManager::registerHandler<RequestCreateEntityMessage>(14);
     EventManager::registerHandler<MoveEntitiesMessage>(15);
