@@ -41,7 +41,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
     const float STOP_DISTANCE_SQ = 1.5f * 1.5f;
     const float RESUME_CHASE_DISTANCE_SQ = 2.0f * 2.0f;
     const float UPDATE_THRESHOLD_SQ = 0.7f * 0.7f;
-    const int MAX_PATH_UPDATES_PER_TICK = 100;
+    const int MAX_PATH_UPDATES_PER_TICK = 1000;
     int pathUpdatesThisTick = 0;
 
     for (auto& [entity, ai] : components.ai)
@@ -178,7 +178,22 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
 
                 Lobby* lobby = EntityManager::Instance().GetLobbyByEntity(entity);
                 if (lobby) {
-                    lobbyMessages[lobby].addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
+                    auto& msg = lobbyMessages[lobby];
+                    msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
+
+					// Send in batches of 100 updates to avoid large packets
+                    if (msg.updates.size() >= 100) {
+                        Serializer s;
+                        msg.serialize(s);
+
+                        Engine::Instance().Server()->SendToMultiple(
+                            LobbyManager::getClientsInLobby(lobby->id),
+                            s.getBuffer(),
+                            msg.getClassName()
+                        );
+
+                        msg.updates.clear(); 
+                    }
                 }
             }
         }
@@ -191,7 +206,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
         {
             Serializer s;
             msg.serialize(s);
-            Engine::Instance().GetProfiler()->Broadcast(s.getBuffer());
+           /* Engine::Instance().GetProfiler()->Broadcast(s.getBuffer());*/
             Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), s.getBuffer(), msg.getClassName());
         }
     }

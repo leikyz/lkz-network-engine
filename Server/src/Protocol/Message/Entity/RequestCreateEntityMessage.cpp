@@ -212,6 +212,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
                     params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
                     params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
                     params.updateFlags = Constants::AGENT_UPDATE_FLAGS & ~DT_CROWD_OBSTACLE_AVOIDANCE;
+                    //params.updateFlags = DT_CROWD_ANTICIPATE_TURNS | DT_CROWD_OPTIMIZE_TOPO | DT_CROWD_OPTIMIZE_VIS; // disable
 
                     params.userData = &aiComp;
 
