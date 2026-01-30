@@ -44,7 +44,7 @@ public:
     ~WindowsServer() override;
 
     void Start() override;
-    void Send(const sockaddr_in& clientAddr, const std::vector<uint8_t>& buffer, const char* messageName) override;
+    void Send(const sockaddr_in& clientAddr, uint8_t* data, size_t size, const char* messageName) override;
     void SendToMultiple(const std::vector<Client*>& clients,const std::vector<uint8_t>& buffer, const char* messageName, const Client* excludedClient = nullptr) override;
     void Poll() override;
 

@@ -67,23 +67,29 @@ void EventManager::registerHandler(uint8_t id)
     messageHandlers[id] = &handleMessage<T>;
 }
 
-void EventManager::processMessage(std::vector<uint8_t>& buffer, const sockaddr_in& senderAddr)
+void EventManager::processMessage(
+    const uint8_t* data,
+    size_t size,
+    const sockaddr_in& senderAddr
+)
 {
-    if (buffer.empty()) {
+    if (!data || size == 0)
         return;
-    }
 
-	// The first byte is the message ID
-    uint8_t id = buffer[0]; 
+	// First byte is the message ID
+    uint8_t id = data[0];
 
     if (!messageHandlers[id]) {
         std::cout << "failed: " << static_cast<int>(id) << std::endl;
         return;
     }
-    buffer.erase(buffer.begin()); 
 
-    messageHandlers[id](buffer, senderAddr);
+    const uint8_t* payload = data + 1;
+    size_t payloadSize = size - 1;
+
+    messageHandlers[id](payload, senderAddr);
 }
+
 
 template<typename T>
 void EventManager::handleMessage(const std::vector<uint8_t>& buffer, const sockaddr_in& senderAddr)

@@ -13,10 +13,10 @@ class EventManager
 {
 public:
 	// Type definition for message handler functions
-    using MessageHandler = void(*)(const std::vector<uint8_t>&, const sockaddr_in&);
+    using MessageHandler = void(*)(const uint8_t* data, const sockaddr_in&);
 
     static void BindEvents();
-    static void processMessage(std::vector<uint8_t>& buffer, const sockaddr_in& senderAddr);
+    static void processMessage(const uint8_t* data, size_t bytesTransfered, const sockaddr_in& senderAddr);
 
 private:
 	// Array of message handlers indexed by message ID (0-255) can handle up to 256 different message types

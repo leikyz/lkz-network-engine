@@ -37,9 +37,8 @@ public:
     *
     * \param clientAddr
     * \param buffer
-    * \param messageName
     */
-    virtual void Send(const sockaddr_in& client, const std::vector<uint8_t>& buffer, const char* messageName) = 0;
+    virtual void Send(const sockaddr_in& client, uint8_t* data, size_t size, const char* messageName) = 0;
 
     /**
     * @brief Sends a packet to multiple clients, with an option to exclude a specific client.
