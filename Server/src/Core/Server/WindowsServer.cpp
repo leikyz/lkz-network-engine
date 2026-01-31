@@ -10,7 +10,8 @@ WindowsServer::~WindowsServer()
 {
     running = false;
     if (completionPort) CloseHandle(completionPort);
-    if (listenSocket != INVALID_SOCKET) closesocket(listenSocket);
+    if (udpSocket != INVALID_SOCKET) closesocket(udpSocket);
+    if (tcpSocket != INVALID_SOCKET) closesocket(tcpSocket); 
     WSACleanup();
 }
 
@@ -25,10 +26,17 @@ void WindowsServer::Start()
         return;
     }
 
-    listenSocket = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+    udpSocket = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 
-    if (listenSocket == INVALID_SOCKET) {
-        std::cerr << "[WindowsServer] socket creation failed\n";
+    if (udpSocket == INVALID_SOCKET) {
+        std::cerr << "[WindowsServer] UDP socket creation failed\n";
+        return;
+    }
+
+    tcpSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+
+    if (tcpSocket == INVALID_SOCKET) {
+        std::cerr << "[HTTP] socket creation failed\n";
         return;
     }
 
@@ -37,10 +45,23 @@ void WindowsServer::Start()
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (bind(listenSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        std::cerr << "[WindowsServer] bind failed\n";
+    if (bind(udpSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "[WindowsServer] UDP bind failed\n";
         return;
     }
+
+    sockaddr_in httpAddr{};
+    httpAddr.sin_family = AF_INET;
+    httpAddr.sin_addr.s_addr = INADDR_ANY;
+    httpAddr.sin_port = htons(Constants::TCP_PORT); 
+
+    if (bind(tcpSocket, (sockaddr*)&httpAddr, sizeof(httpAddr))) {
+        std::cerr << "[WindowsServer] TCP bind failed\n";
+        return;
+    }
+
+    listen(tcpSocket, SOMAXCONN);
+
 
     InitIOCP();
 	running = true;
@@ -51,22 +72,29 @@ void WindowsServer::Start()
 void WindowsServer::InitIOCP() 
 {
     completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
+
     if (!completionPort)
     {
         std::cerr << "[WindowsServer] CreateIoCompletionPort failed\n";
         return;
     }
 
-    if (!CreateIoCompletionPort((HANDLE)listenSocket, completionPort, 0, 0)) 
+    if (!CreateIoCompletionPort((HANDLE)udpSocket, completionPort, 0, 0)) 
     {
-        std::cerr << "[WindowsServer] Associate socket with IOCP failed\n";
+        std::cerr << "[WindowsServer] Associate UDP socket with IOCP failed\n";
+        return;
+    }
+
+    if (!CreateIoCompletionPort((HANDLE)tcpSocket, completionPort, 0, 0))
+    {
+        std::cerr << "[WindowsServer] Associate TCP socket with IOCP failed\n";
         return;
     }
 
     // Preallocate IoData
     for (size_t i = 0; i < std::thread::hardware_concurrency() * 2; i++) 
     {
-        auto ioData = std::make_unique<ReceiveIoData>(bufferSize);
+        auto ioData = std::make_unique<ReceiveUDPIoData>(bufferSize);
         PostReceive(ioData.get());
         ioDataPool.push_back(std::move(ioData));
     }
@@ -87,12 +115,12 @@ void WindowsServer::SendToMultiple(std::span<const sockaddr_in> addresses, std::
     }
 }
 
-void WindowsServer::PostReceive(ReceiveIoData* ioData) {
+void WindowsServer::PostReceive(ReceiveUDPIoData* ioData) {
     DWORD flags = 0;
     ioData->clientAddrLen = sizeof(ioData->clientAddr);
     ZeroMemory(&ioData->overlapped, sizeof(OVERLAPPED));
 
-    int ret = WSARecvFrom(listenSocket, &ioData->wsabuf, 1, nullptr, &flags,
+    int ret = WSARecvFrom(udpSocket, &ioData->wsabuf, 1, nullptr, &flags,
                            (sockaddr*)&ioData->clientAddr, &ioData->clientAddrLen,
                            &ioData->overlapped, nullptr);
 
@@ -101,40 +129,47 @@ void WindowsServer::PostReceive(ReceiveIoData* ioData) {
     }
 }
 
-void WindowsServer::Poll()
+void WindowsServer::Poll() 
 {
     DWORD bytesTransferred = 0;
     ULONG_PTR completionKey = 0;
     OVERLAPPED* overlapped = nullptr;
 
     BOOL success = GetQueuedCompletionStatus(
-        completionPort,
-        &bytesTransferred,
-        &completionKey,
-        &overlapped,
-        INFINITE
+        completionPort, &bytesTransferred, &completionKey, &overlapped, INFINITE
     );
 
     if (!overlapped) return;
 
-	// We retrieve our BaseIo structure from the OVERLAPPED pointer
     BaseIo* base = CONTAINING_RECORD(overlapped, BaseIo, overlapped);
 
-    if (base->opType == IO_OPERATION::RECEIVE) {
-        ReceiveIoData* ioData = static_cast<ReceiveIoData*>(base);
+    switch (base->opType) 
+    {
+    case IO_OPERATION::RECEIVE_UDP: 
+    {
+        ReceiveUDPIoData* ioData = static_cast<ReceiveUDPIoData*>(base);
 
-		// Process the received data only if the operation was successful
         if (success && bytesTransferred > 0)
             EventManager::processMessage(ioData->buffer, ioData->clientAddr);
 
-		// We repost the receive to continue receiving data
-        PostReceive(ioData);
+        PostReceive(ioData); 
+        break;
     }
-    else if (base->opType == IO_OPERATION::SEND) 
-    {
-        SendIoData* sendData = static_cast<SendIoData*>(base);
-		// Clean up send data
-        delete sendData;
+
+    case IO_OPERATION::SEND_UDP: {
+        delete static_cast<SendUDPIoData*>(base);
+        break;
+    }
+
+    case IO_OPERATION::ACCEPT_TCP: {
+        std::cout << "New TCP Connection" << std::endl;
+        break;
+    }
+
+    case IO_OPERATION::RECEIVE_TCP: {
+        std::cout << "New TCP Data received" << std::endl;
+        break;
+    }
     }
 }
 
@@ -144,7 +179,7 @@ void WindowsServer::Send(
     const char* messageName
 )
 {
-    auto* io = new SendIoData{};
+    auto* io = new SendUDPIoData{buffer, clientAddr};
 
     io->data.assign(buffer.begin(), buffer.end());
 
@@ -155,7 +190,7 @@ void WindowsServer::Send(
     ZeroMemory(&io->overlapped, sizeof(OVERLAPPED));
 
     int ret = WSASendTo(
-        listenSocket,
+        udpSocket,
         &io->wsabuf,
         1,
         nullptr,

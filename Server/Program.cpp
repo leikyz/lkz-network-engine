@@ -21,7 +21,7 @@
 int main()
 {
 #ifdef _WIN32
-    WindowsServer* server = new WindowsServer(Constants::SERVER_PORT);
+    WindowsServer* server = new WindowsServer(Constants::UDP_PORT);
 #else
     LinuxServer server = new LinuxServer();
 #endif

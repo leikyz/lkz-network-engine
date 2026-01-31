@@ -7,7 +7,8 @@ namespace Constants
 {
     // ----- Engine -----
 
-	inline constexpr int SERVER_PORT = 5555;    // Default server port
+    inline constexpr int TCP_PORT = 8081; // Must be match with go server
+	inline constexpr int UDP_PORT = 5555;    // Default server port
 	inline const char* const SERVER_IP = "104.194.157.137"; // Default server IP address
 	inline constexpr float FIXED_DELTA_TIME = 0.02f; // Fixed update timestep (50 updates per second)
 	inline const char* const APP_NAME = "LKZ Network"; // Application name
