@@ -14,6 +14,7 @@ namespace Constants
 	inline const size_t NETWORK_BUFFER_SIZE = 1024; // Size of the network buffer for sending/receiving data
 	inline const bool LOGGER_ENABLED = false; // Enable or disable logging
     inline const bool PROFILER_ENABLED = false; // Enable or disable logging
+	inline const size_t MAX_CLIENTS = 1000; // Maximum number of clients the server can handle in an optimal way (pre allocation)
 
      // ----- Mathematical -----
 

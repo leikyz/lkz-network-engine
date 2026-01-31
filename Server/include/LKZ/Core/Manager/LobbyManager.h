@@ -34,7 +34,7 @@ public:
 private:
     static std::unordered_map<int, std::unique_ptr<Lobby>> m_lobbies;
     static std::atomic<int> m_nextLobbyId;
-    static std::mutex m_lobbiesMutex;
+    static std::shared_mutex m_lobbiesMutex;
 };
 
 #endif
