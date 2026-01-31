@@ -24,7 +24,7 @@ void ChangeReadyStatusMessage::deserialize(Deserializer& deserializer)
 
 void ChangeReadyStatusMessage::process(const sockaddr_in& senderAddr)
 {
-	Client* currentClient = ClientManager::getClientByAddress(senderAddr);
+	/*Client* currentClient = ClientManager::getClientByAddress(senderAddr);
 
 	Lobby* lobby = LobbyManager::getLobby(currentClient->lobbyId);
 
@@ -55,7 +55,7 @@ void ChangeReadyStatusMessage::process(const sockaddr_in& senderAddr)
             lobby->gameWaveEntity = entity;
             components.AddComponent(entity, WaveComponent{ lobby->id });
         }
-	}
+	}*/
 
 
 }

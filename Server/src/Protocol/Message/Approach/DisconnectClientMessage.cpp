@@ -23,7 +23,7 @@ void DisconnectClientMessage::deserialize(Deserializer& deserializer)
 
 void DisconnectClientMessage::process(const sockaddr_in& senderAddr)
 {
-    MatchmakingManager::RemovePlayerFromQueue(senderAddr);
+   /* MatchmakingManager::RemovePlayerFromQueue(senderAddr);
 
     Client* currentClient = ClientManager::getClientByAddress(senderAddr);
     if (!currentClient)
@@ -72,7 +72,7 @@ void DisconnectClientMessage::process(const sockaddr_in& senderAddr)
             }
         }
     }
-    ClientManager::removeClient(senderAddr);
+    ClientManager::removeClient(senderAddr);*/
 }
 
 

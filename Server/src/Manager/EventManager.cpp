@@ -67,13 +67,9 @@ void EventManager::registerHandler(uint8_t id)
     messageHandlers[id] = &handleMessage<T>;
 }
 
-void EventManager::processMessage(
-    const uint8_t* data,
-    size_t size,
-    const sockaddr_in& senderAddr
-)
+void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr)
 {
-    if (!data || size == 0)
+    if (data.empty())
         return;
 
 	// First byte is the message ID
@@ -84,18 +80,16 @@ void EventManager::processMessage(
         return;
     }
 
-    const uint8_t* payload = data + 1;
-    size_t payloadSize = size - 1;
 
-    messageHandlers[id](payload, senderAddr);
+    messageHandlers[id](data, senderAddr);
 }
 
 
 template<typename T>
-void EventManager::handleMessage(const std::vector<uint8_t>& buffer, const sockaddr_in& senderAddr)
+void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr)
 { 
     T msg;
-    Deserializer deserializer(buffer);
+    Deserializer deserializer(data);
 
     std::string name = typeid(msg).name();
     name = name.substr(7); 
@@ -103,7 +97,7 @@ void EventManager::handleMessage(const std::vector<uint8_t>& buffer, const socka
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(senderAddr.sin_addr), ip, INET_ADDRSTRLEN);
     // added +1 because we removed 1 byte before handled event (ID)
-    Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, buffer.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);
+    //Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, buffer.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);
 
 	// Parse and process the message
     msg.deserialize(deserializer);

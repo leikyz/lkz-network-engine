@@ -111,7 +111,7 @@
     <ClCompile Include="src\Manager\EventManager.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Manager\LobbyManager.cpp">
+    <ClCompile Include="src\Manager\SessionManager.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\Manager\MatchmakingManager.cpp">
@@ -461,7 +461,7 @@
     <ClInclude Include="include\LKZ\Core\Manager\EventManager.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\LKZ\Core\Manager\LobbyManager.h">
+    <ClInclude Include="include\LKZ\Core\Manager\SessionManager.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\LKZ\Core\Manager\MatchmakingManager.h">

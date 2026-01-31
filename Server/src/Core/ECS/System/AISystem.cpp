@@ -34,7 +34,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
     if (!navQuery) return;
 
     const dtQueryFilter* filter = crowd->getFilter(Constants::AGENT_QUERY_FILTER_TYPE);
-    std::unordered_map<Lobby*, MoveEntitiesMessage> lobbyMessages;
+    std::unordered_map<Session*, MoveEntitiesMessage> sessionMessages;
 
     // Distance and logic constants
     const float AI_AGGRO_RANGE_SQ = 1000.0f * 1000.0f;
@@ -55,8 +55,8 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
         if (entity % 4 == globalFrameCount % 4)
         {
             Vector3& position = components.positions[entity].position;
-            Lobby* lobby = EntityManager::Instance().GetLobbyByEntity(entity);
-            if (!lobby) continue;
+            Session* session = EntityManager::Instance().GetSessionByEntity(entity);
+            if (!session) continue;
 
             // Adjust timer decrement because we only enter this block every 4 frames
             ai.repathTimer -= (deltaTime * 4.0f);
@@ -75,8 +75,8 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
             for (auto& [playerEntity, input] : components.playerInputs)
             {
                 if (components.positions.find(playerEntity) == components.positions.end()) continue;
-                Lobby* playerLobby = EntityManager::Instance().GetLobbyByEntity(playerEntity);
-                if (playerLobby != lobby) continue;
+                Session* playerSession = EntityManager::Instance().GetSessionByEntity(playerEntity);
+                if (playerSession != session) continue;
 
                 Vector3& playerPos = components.positions[playerEntity].position;
                 float distSq = (playerPos - position).LengthSquared();
@@ -176,9 +176,9 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                 ai.timeSinceLastSend = 0.0f;
                 ai.lastSentPosition = currentPos;
 
-                Lobby* lobby = EntityManager::Instance().GetLobbyByEntity(entity);
-                if (lobby) {
-                    auto& msg = lobbyMessages[lobby];
+                Session* session = EntityManager::Instance().GetSessionByEntity(entity);
+                if (session) {
+                    auto& msg = sessionMessages[session];
                     msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
 
 					// Send in batches of 100 updates to avoid large packets
@@ -187,7 +187,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                         msg.serialize(s);
 
                         Engine::Instance().Server()->SendToMultiple(
-                            LobbyManager::getClientsInLobby(lobby->id),
+                            session->clientsAddress,
                             s.getBuffer(),
                             msg.getClassName()
                         );
@@ -200,14 +200,14 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
     }
 
     // Broadcast messages grouped by Lobby
-    for (auto& [lobby, msg] : lobbyMessages)
+    for (auto& [session, msg] : sessionMessages)
     {
         if (!msg.updates.empty())
         {
             Serializer s;
             msg.serialize(s);
            /* Engine::Instance().GetProfiler()->Broadcast(s.getBuffer());*/
-            Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), s.getBuffer(), msg.getClassName());
+            Engine::Instance().Server()->SendToMultiple(session->clientsAddress, s.getBuffer(), msg.getClassName());
         }
     }
 }

@@ -28,7 +28,7 @@ void ServerInformationsMessage::process(const sockaddr_in& senderAddr)
 
     /*int lastLobbyId = LobbyManager::getLastLobbyId();*/
 
-    status = true;
+   /* status = true;
 	playersCount = ClientManager::getClients().size();
 
     Serializer serializer;
@@ -36,5 +36,5 @@ void ServerInformationsMessage::process(const sockaddr_in& senderAddr)
 
 	Client* client = ClientManager::getClientByAddress(senderAddr);
 
-    Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());
+    Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());*/
 }

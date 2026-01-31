@@ -62,10 +62,10 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
     for (auto& [entity, inputComp] : components.playerInputs)
     {
-        Lobby* lobby = EntityManager::Instance().GetLobbyByEntity(entity);
-        if (!lobby) continue;
+        Session* session = EntityManager::Instance().GetSessionByEntity(entity);
+        if (!session) continue;
 
-        Client* ownerClient = LobbyManager::getClientByEntityId(entity);
+        Client* ownerClient = nullptr;/* = SessionManager::getClientByEntityId(entity);*/
         if (!ownerClient) continue;
 
         auto& pos = components.positions[entity].position;
@@ -169,10 +169,10 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
             moveMsg.serialize(s);
 
             Engine::Instance().Server()->SendToMultiple(
-                LobbyManager::getClientsInLobby(lobby->id),
+                session->clientsAddress,
                 s.getBuffer(),
-                moveMsg.getClassName(),
-                ownerClient);
+                moveMsg.getClassName()
+               /* ownerClient*/);
 
             LastEntityPositionMessage msg(entity,pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,lastProcessedSeq);
             msg.serialize(s);

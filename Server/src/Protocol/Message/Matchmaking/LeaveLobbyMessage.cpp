@@ -23,7 +23,7 @@ void LeaveLobbyMessage::deserialize(Deserializer& deserializer)
 
 void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
 {
-    Client* currentClient = ClientManager::getClientByAddress(senderAddr);
+   /* Client* currentClient = ClientManager::getClientByAddress(senderAddr);
     Lobby* lobby = LobbyManager::getLobby(currentClient->lobbyId);
     uint8_t removedPosition = currentClient->positionInLobby;
     if (lobby)
@@ -87,5 +87,5 @@ void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
         currentClient->lobbyId = -1;
         currentClient->positionInLobby = 0;
         currentClient->matchmakingMapIdRequest = 0;   
-    }
+    }*/
 }

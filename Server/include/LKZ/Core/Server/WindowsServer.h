@@ -18,26 +18,39 @@
 #include <span>
 #pragma comment(lib, "ws2_32.lib")
 
- /**
- * @brief Structure to hold data for each I/O operation.
- */
-struct IoData 
-{
+enum class IO_OPERATION { RECEIVE, SEND };
+
+// Base structure for I/O operations
+struct BaseIo {
+    OVERLAPPED overlapped{};
+    IO_OPERATION opType;
+};
+
+// Structure for receive I/O operations
+struct ReceiveIoData : public BaseIo {
+    ReceiveIoData() { opType = IO_OPERATION::RECEIVE; }
     OVERLAPPED overlapped{};
     WSABUF wsabuf{};
     sockaddr_in clientAddr{};
     int clientAddrLen = sizeof(sockaddr_in);
     std::vector<uint8_t> buffer;
 
-    IoData(size_t bufferSize) : buffer(bufferSize) {
+    ReceiveIoData(size_t bufferSize) : buffer(bufferSize) {
         wsabuf.buf = reinterpret_cast<char*>(buffer.data());
         wsabuf.len = static_cast<ULONG>(buffer.size());
     }
 };
 
- /**
- * @brief Windows-specific server implementation using IOCP for high-performance networking.
- */
+// Structure for send I/O operations
+struct SendIoData : public BaseIo {
+    SendIoData() { opType = IO_OPERATION::SEND; }
+    OVERLAPPED overlapped{};
+    WSABUF wsabuf{};
+    sockaddr_in target{};
+    std::vector<uint8_t> data;
+};
+
+// Windows-specific server implementation using IOCP
 class WindowsServer : public INetworkInterface 
 {
 public:
@@ -45,33 +58,25 @@ public:
     ~WindowsServer() override;
 
     void Start() override;
-    void Send(const sockaddr_in& clientAddr, std::span<const uint8_t>, size_t size, const char* messageName) override;
-    void SendToMultiple(const std::vector<Client*>& clients, std::span<const uint8_t>, const char* messageName, const Client* excludedClient = nullptr) override;
+    void Send(const sockaddr_in& clientAddr, std::span<const uint8_t> data, const char* messageName) override;
+    void SendToMultiple(std::span<const sockaddr_in> addresses, std::span<const uint8_t> data, const char* messageName, const sockaddr_in* excludedAddr = nullptr) override; 
     void Poll() override;
-
 private:
 
-     /**
-	 * @brief Initializes the IO Completion Port and starts worker threads.
-     */
     void InitIOCP();
 
-    /**
-	 * @brief Accepts a new client connection and associates it with the IOCP.
-     */
-    void PostReceive(IoData* ioData);
+	// Posts a receive operation to the IOCP for the given ioData
+    void PostReceive(ReceiveIoData* ioData);
 
-    /**
-	 * @brief Notifies the thread pool of a completed I/O operation.
-     */
-    void NotifyThreadPool(IoData* ioData, DWORD bytesTransferred);
+	// Handles completed I/O operations from the IOCP
+
 
 private:
     int port;
     SOCKET listenSocket = INVALID_SOCKET;
     HANDLE completionPort = nullptr;
 
-    std::vector<std::unique_ptr<IoData>> ioDataPool;
+    std::vector<std::unique_ptr<ReceiveIoData>> ioDataPool;
     size_t bufferSize;
 
     bool running = false;

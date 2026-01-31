@@ -2,7 +2,7 @@
 #include "LKZ/Core/ECS/Component/Component.h."
 #include <iostream>
 
-Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& components, Lobby* lobby)
+Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& components, Session* session)
 {
     Entity id;
     if (!m_freeIDs.empty()) {
@@ -13,7 +13,7 @@ Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& compo
         id = nextID++;
     }
 
-    m_entityLobbyMap[id] = lobby;
+    m_entitySessionMap[id] = session;
 
     return id;
 }
@@ -22,13 +22,13 @@ void EntityManager::DestroyEntity(Entity entity)
 {
 
     m_freeIDs.push(entity);
-    m_entityLobbyMap.erase(entity);
+    m_entitySessionMap.erase(entity);
 }
 
-Entity EntityManager::GetEntityById(uint16_t entityId, Lobby* lobby)
+Entity EntityManager::GetEntityById(uint16_t entityId, Session* lobby)
 {
 
-    for (const auto& [entity, mappedLobby] : m_entityLobbyMap) {
+    for (const auto& [entity, mappedLobby] : m_entitySessionMap) {
         if (entity == entityId && mappedLobby == lobby) {
             return entity;
         }
@@ -36,11 +36,11 @@ Entity EntityManager::GetEntityById(uint16_t entityId, Lobby* lobby)
     return 0; // or some invalid entity value
 }
 
-Lobby* EntityManager::GetLobbyByEntity(Entity entity)
+Session* EntityManager::GetSessionByEntity(Entity entity)
 {
 
-    auto it = m_entityLobbyMap.find(entity);
-    if (it != m_entityLobbyMap.end()) {
+    auto it = m_entitySessionMap.find(entity);
+    if (it != m_entitySessionMap.end()) {
         return it->second;
     }
     return nullptr;

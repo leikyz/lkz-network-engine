@@ -6,17 +6,17 @@
 #include <functional>
 #include <string>
 #include <winsock2.h>
-
+#include <span>
 // Manager for handling incoming events/messages
 
 class EventManager
 {
 public:
 	// Type definition for message handler functions
-    using MessageHandler = void(*)(const uint8_t* data, const sockaddr_in&);
+    using MessageHandler = void(*)(std::span<const uint8_t>, const sockaddr_in&);
 
     static void BindEvents();
-    static void processMessage(const uint8_t* data, size_t bytesTransfered, const sockaddr_in& senderAddr);
+    static void processMessage(std::span<const uint8_t>, const sockaddr_in& senderAddr);
 
 private:
 	// Array of message handlers indexed by message ID (0-255) can handle up to 256 different message types
@@ -24,7 +24,7 @@ private:
 
     template<typename T>
 	// Generic message handler to process messages of type T
-    static void handleMessage(const std::vector<uint8_t>& buffer, const sockaddr_in& senderAddr);
+    static void handleMessage(std::span<const uint8_t>, const sockaddr_in&);
 
     template<typename T>
 	// Registers a message handler for a specific message ID

@@ -197,7 +197,7 @@
     <ClCompile Include="src\Core\ECS\Manager\ComponentManager.cpp" />
     <ClCompile Include="src\Core\ECS\Manager\EntityManager.cpp" />
     <ClCompile Include="src\Manager\EventManager.cpp" />
-    <ClCompile Include="src\Manager\LobbyManager.cpp" />
+    <ClCompile Include="src\Manager\SessionManager.cpp" />
     <ClCompile Include="src\Manager\MatchmakingManager.cpp" />
     <ClCompile Include="src\Core\ECS\Manager\SystemManager.cpp" />
     <ClCompile Include="src\Protocol\Message\Approach\CreateClientMessage.cpp" />
@@ -256,7 +256,7 @@
     <ClInclude Include="include\LKZ\Core\Threading\ThreadTaskPool.h" />
     <ClInclude Include="include\LKZ\Core\Manager\ClientManager.h" />
     <ClInclude Include="include\LKZ\Core\Manager\EventManager.h" />
-    <ClInclude Include="include\LKZ\Core\Manager\LobbyManager.h" />
+    <ClInclude Include="include\LKZ\Core\Manager\SessionManager.h" />
     <ClInclude Include="include\LKZ\Core\Manager\MatchmakingManager.h" />
     <ClInclude Include="include\LKZ\Session\Client.h" />
     <ClInclude Include="include\LKZ\Core\ECS\Entity.h" />

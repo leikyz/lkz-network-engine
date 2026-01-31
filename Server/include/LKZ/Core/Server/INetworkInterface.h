@@ -21,6 +21,7 @@
     #include <arpa/inet.h>
     #include <sys/epoll.h>
 #endif
+#include <span>
 
 class INetworkInterface 
 {
@@ -38,7 +39,7 @@ public:
     * \param clientAddr
     * \param buffer
     */
-    virtual void Send(const sockaddr_in& client, uint8_t* data, size_t size, const char* messageName) = 0;
+    virtual void Send(const sockaddr_in& clientAddr, std::span<const uint8_t> data, const char* messageName) = 0;
 
     /**
     * @brief Sends a packet to multiple clients, with an option to exclude a specific client.
@@ -46,7 +47,7 @@ public:
     * @param buffer The data buffer to send.
     * @
     */
-	virtual void SendToMultiple(const std::vector<Client*>& clients, const std::vector<uint8_t>& buffer, const char* messageName, const Client* excludedClient = nullptr) = 0;
+    virtual void SendToMultiple(std::span<const sockaddr_in> addresses, std::span<const uint8_t> data, const char* messageName, const sockaddr_in* excludedAddr = nullptr) = 0;
 
     /**
 	 * @brief Polls for completed I/O operations and processes them.

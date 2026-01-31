@@ -2,7 +2,6 @@
 #include <LKZ/Core/ECS/Manager/ComponentManager.h>
 #include <LKZ/Core/ECS/Manager/EntityManager.h>
 #include <LKZ/Core/Manager/ClientManager.h>
-#include <LKZ/Core/Manager/LobbyManager.h>
 #include <LKZ/Core/Engine.h>
 #include <LKZ/Utility/Constants.h>
 #include "LKZ/Core/Threading/CommandQueue.h" // Required for the fix
@@ -51,8 +50,8 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr)
     auto* client = ClientManager::getClientByAddress(senderAddr);
     if (!client) return;
 
-    Lobby* lobby = LobbyManager::getLobby(client->lobbyId);
-    if (!lobby) return;
+    Session* session = SessionManager::GetSession(client->lobbyId);
+    if (!session) return;
 
     // Capture data locally to pass into the lambda
     Entity entity = entityId;
@@ -88,8 +87,8 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr)
     serialize(serializer);
 
     Engine::Instance().Server()->SendToMultiple(
-        LobbyManager::getClientsInLobby(lobby->id),
+        session->clientsAddress,
         serializer.getBuffer(),
         getClassName(),
-        client);
+        &senderAddr);
 }

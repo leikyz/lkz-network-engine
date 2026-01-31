@@ -35,10 +35,10 @@ void EntityDeadMessage::deserialize(Deserializer& deserializer)
 
 void EntityDeadMessage::process(const sockaddr_in& senderAddr)
 {
-    Client* client = ClientManager::getClientByAddress(senderAddr);
-    Lobby* lobby = LobbyManager::getLobby(client->lobbyId);
+    /*Client* client = ClientManager::getClientByAddress(senderAddr);
+    Session* session = SessionManager::GetSession(client->lobbyId);
 
-    if (!client || !lobby)
+    if (!client || !session)
         return;
 
     ComponentManager& components = ComponentManager::Instance();
@@ -53,9 +53,9 @@ void EntityDeadMessage::process(const sockaddr_in& senderAddr)
     serialize(serializer);
 
     Engine::Instance().Server()->SendToMultiple(
-        LobbyManager::getClientsInLobby(lobby->id),
+        session->clientsAddress,
         serializer.getBuffer(),
         getClassName()
-    ); 
+    ); */
 
 }

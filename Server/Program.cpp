@@ -12,7 +12,6 @@
 #include "LKZ/Utility/Logger.h"
 #include <string>
 #include <LKZ/Core/ECS/System/AISystem.h>
-#include <LKZ/Core/Manager/LobbyManager.h>
 #include <LKZ/Core/ECS/System/PlayerSystem.h>
 #include <LKZ/Core/ECS/System/WaveSystem.h>
 #include <Common/ProfilerProtocol.h>

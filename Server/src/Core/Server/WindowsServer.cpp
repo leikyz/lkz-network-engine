@@ -1,15 +1,7 @@
 #include "LKZ/Core/Server/WindowsServer.h"
 #include <iostream>
 #include <LKZ/Core/Manager/EventManager.h>
-struct SendIoData {
-    OVERLAPPED overlapped{};
-    WSABUF wsabuf{};
-    sockaddr_in target{};
 
-    // On garde un pointeur vers les données. 
-    // Si c'est un buffer partagé, il ne sera pas détruit tant que cet objet existe.
-    std::unique_ptr<uint8_t[]> data;
-};
 
 WindowsServer::WindowsServer(int port, size_t bufferSize)
     : port(port), bufferSize(bufferSize) {}
@@ -74,29 +66,28 @@ void WindowsServer::InitIOCP()
     // Preallocate IoData
     for (size_t i = 0; i < std::thread::hardware_concurrency() * 2; i++) 
     {
-        auto ioData = std::make_unique<IoData>(bufferSize);
+        auto ioData = std::make_unique<ReceiveIoData>(bufferSize);
         PostReceive(ioData.get());
         ioDataPool.push_back(std::move(ioData));
     }
 }
-void WindowsServer::SendToMultiple(const std::vector<Client*>& clients, const std::vector<uint8_t>& buffer, const char* messageName, const Client* excludedClient)
+void WindowsServer::SendToMultiple(std::span<const sockaddr_in> addresses, std::span<const uint8_t> data, const char* messageName, const sockaddr_in* excludedAddr)
 {
-    for (const auto& clientPtr : clients)
+    for (const auto& addr : addresses)
     {
-        if (!clientPtr) continue;
-
-        if (excludedClient &&
-            clientPtr->address.sin_addr.s_addr == excludedClient->address.sin_addr.s_addr &&
-            clientPtr->address.sin_port == excludedClient->address.sin_port)
+		// Verify if we need to exclude this address
+        if (excludedAddr &&
+            addr.sin_addr.s_addr == excludedAddr->sin_addr.s_addr &&
+            addr.sin_port == excludedAddr->sin_port)
         {
-            continue; // Skip excluded client
+			continue; // Skip this address
         }
 
-        Send(clientPtr->address, buffer, bufferSize, messageName);
+        Send(addr, data, messageName);
     }
 }
 
-void WindowsServer::PostReceive(IoData* ioData) {
+void WindowsServer::PostReceive(ReceiveIoData* ioData) {
     DWORD flags = 0;
     ioData->clientAddrLen = sizeof(ioData->clientAddr);
     ZeroMemory(&ioData->overlapped, sizeof(OVERLAPPED));
@@ -110,46 +101,57 @@ void WindowsServer::PostReceive(IoData* ioData) {
     }
 }
 
-void WindowsServer::Poll() 
+void WindowsServer::Poll()
 {
-    DWORD bytesTransferred;
-    ULONG_PTR completionKey;
-    OVERLAPPED* overlapped;
+    DWORD bytesTransferred = 0;
+    ULONG_PTR completionKey = 0;
+    OVERLAPPED* overlapped = nullptr;
 
     BOOL success = GetQueuedCompletionStatus(
         completionPort,
         &bytesTransferred,
         &completionKey,
         &overlapped,
-		INFINITE // Block indefinitely until an I/O operation completes
+        INFINITE
     );
 
     if (!overlapped) return;
 
-    IoData* ioData = CONTAINING_RECORD(overlapped, IoData, overlapped);
+	// We retrieve our BaseIo structure from the OVERLAPPED pointer
+    BaseIo* base = CONTAINING_RECORD(overlapped, BaseIo, overlapped);
 
-    if (bytesTransferred > 0)
-    {
-        EventManager::processMessage(
-            ioData->buffer.data(),
-            bytesTransferred,
-            ioData->clientAddr
-        );
+    if (base->opType == IO_OPERATION::RECEIVE) {
+        ReceiveIoData* ioData = static_cast<ReceiveIoData*>(base);
+
+		// Process the received data only if the operation was successful
+        if (success && bytesTransferred > 0)
+            EventManager::processMessage(ioData->buffer, ioData->clientAddr);
+
+		// We repost the receive to continue receiving data
+        PostReceive(ioData);
     }
-    PostReceive(ioData);
- /*   NotifyThreadPool(ioData, bytesTransferred);*/
+    else if (base->opType == IO_OPERATION::SEND) 
+    {
+        SendIoData* sendData = static_cast<SendIoData*>(base);
+		// Clean up send data
+        delete sendData;
+    }
 }
 
-void WindowsServer::Send(const sockaddr_in& clientAddr, uint8_t* data, size_t size, const char* messageName)
+void WindowsServer::Send(
+    const sockaddr_in& clientAddr,
+    std::span<const uint8_t> buffer,
+    const char* messageName
+)
 {
     auto* io = new SendIoData{};
 
-    io->data = std::make_unique<uint8_t[]>(size);
-    memcpy(io->data.get(), data, size);
+    io->data.assign(buffer.begin(), buffer.end());
 
-    io->wsabuf.buf = (CHAR*)io->data.get();
-    io->wsabuf.len = (ULONG)size;
+    io->wsabuf.buf = reinterpret_cast<CHAR*>(io->data.data());
+    io->wsabuf.len = static_cast<ULONG>(io->data.size());
     io->target = clientAddr;
+
     ZeroMemory(&io->overlapped, sizeof(OVERLAPPED));
 
     int ret = WSASendTo(
@@ -158,7 +160,7 @@ void WindowsServer::Send(const sockaddr_in& clientAddr, uint8_t* data, size_t si
         1,
         nullptr,
         0,
-        (sockaddr*)&io->target,
+        reinterpret_cast<sockaddr*>(&io->target),
         sizeof(io->target),
         &io->overlapped,
         nullptr
@@ -170,7 +172,7 @@ void WindowsServer::Send(const sockaddr_in& clientAddr, uint8_t* data, size_t si
         if (err != WSA_IO_PENDING)
         {
             std::cerr << "[WindowsServer] WSASendTo failed: " << err << "\n";
-            delete io; 
+            delete io;
         }
     }
 }

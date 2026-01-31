@@ -3,6 +3,7 @@
 #include "ComponentManager.h"
 #include <queue>
 #include <unordered_map>
+#include <LKZ/Core/Manager/SessionManager.h>
 
 // Manager for entity creation, destruction, and tracking
 class EntityManager 
@@ -20,13 +21,13 @@ public:
 
     uint32_t GetLastSequenceId(Entity entity) const;
 
-    Entity CreateEntity(EntitySuperType type, ComponentManager& components, Lobby* lobby);
+    Entity CreateEntity(EntitySuperType type, ComponentManager& components, Session* session);
 
     void DestroyEntity(Entity entity);
 
-    Lobby* GetLobbyByEntity(Entity entity);
+    Session* GetSessionByEntity(Entity entity);
 
-    Entity GetEntityById(uint16_t entityId, Lobby* lobby);
+    Entity GetEntityById(uint16_t entityId, Session* lobby);
 
 private:
 	// Private constructor for singleton pattern
@@ -45,6 +46,6 @@ private:
     std::queue<Entity> m_freeIDs;
 
 	// Map to associate entities with their respective lobbies
-    std::unordered_map<Entity, Lobby*> m_entityLobbyMap;
+    std::unordered_map<Entity, Session*> m_entitySessionMap;
 };
 

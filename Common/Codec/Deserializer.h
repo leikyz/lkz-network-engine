@@ -1,25 +1,28 @@
 #ifndef DESERIALIZER_H
 #define DESERIALIZER_H
 
-#include <vector>
 #include <cstdint>
 #include <stdexcept>
+#include <cstring>
+#include <span>
 
-// Little Endian Deserializer
-
-class Deserializer 
+// Little Endian Deserializer using std::span for performance
+class Deserializer
 {
 private:
-   
+    std::span<const uint8_t> m_buffer;
     size_t m_position = 0;
 
 public:
-    explicit Deserializer(const std::vector<uint8_t>& buf) : m_buffer(buf) {}
-    const std::vector<uint8_t>& m_buffer;
+   
+    explicit Deserializer(std::span<const uint8_t> buf) : m_buffer(buf) {}
 
+    const uint8_t* data() const { return m_buffer.data(); }
+    size_t size() const { return m_buffer.size(); }
+    size_t remaining() const { return m_buffer.size() - m_position; }
 
-	// Reads an integer (4 bytes) from the buffer
-    int readInt() 
+    // Read an int (4 bytes)
+    int readInt()
     {
         if (m_position + 4 > m_buffer.size()) {
             throw std::out_of_range("Buffer overflow in readInt");
@@ -34,7 +37,7 @@ public:
         return value;
     }
 
-	// Reads a float (4 bytes) from the buffer
+    // read a float (4 bytes)
     float readFloat()
     {
         if (m_position + sizeof(float) > m_buffer.size()) {
@@ -42,14 +45,11 @@ public:
         }
 
         float value;
-
-		// Use memcpy to avoid strict aliasing issues
         std::memcpy(&value, &m_buffer[m_position], sizeof(float));
         m_position += sizeof(float);
         return value;
     }
 
-	// Reads a boolean (1 byte) from the buffer
     bool readBool()
     {
         if (m_position + 1 > m_buffer.size()) {
@@ -61,7 +61,6 @@ public:
         return value;
     }
 
-	// Reads an unsigned short (2 bytes) from the buffer
     uint16_t readUInt16()
     {
         if (m_position + 2 > m_buffer.size()) {
@@ -74,7 +73,6 @@ public:
         return value;
     }
 
-	// Reads an unsigned byte (1 byte) from the buffer
     uint8_t readByte()
     {
         if (m_position + 1 > m_buffer.size()) {
@@ -85,7 +83,6 @@ public:
         m_position += 1;
         return value;
     }
-
 };
 
 #endif // DESERIALIZER_H

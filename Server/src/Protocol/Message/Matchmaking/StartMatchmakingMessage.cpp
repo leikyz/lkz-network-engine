@@ -21,12 +21,12 @@ void StartMatchmakingMessage::deserialize(Deserializer& deserializer)
 
 void StartMatchmakingMessage::process(const sockaddr_in& senderAddr)
 {
-    Serializer serializer;
+    /*Serializer serializer;
     serialize(serializer);
 
 	Client* client = ClientManager::getClientByAddress(senderAddr);
 	client->matchmakingMapIdRequest = mapId;
 	MatchmakingManager::AddPlayerToQueue(*client);
 
-    Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());
+    Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());*/
 }

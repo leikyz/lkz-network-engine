@@ -2,7 +2,7 @@
 
 #include <winsock2.h>
 #include "LKZ/Core/Manager/ClientManager.h"
-#include "LKZ/Core/Manager/LobbyManager.h"
+#include "LKZ/Core/Manager/SessionManager.h"
 #include "LKZ/Core/Engine.h"
 #include <Common/Codec/Serializer.h>
 #include <Common/Codec/Deserializer.h>

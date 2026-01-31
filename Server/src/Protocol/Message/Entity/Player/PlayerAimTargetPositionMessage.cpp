@@ -38,14 +38,14 @@ void PlayerAimTargetPositionMessage::process(const sockaddr_in& senderAddr)
     Serializer serializer;
     serialize(serializer);
 
-    int lobbyId = ClientManager::getClientByAddress(senderAddr)->lobbyId;
-	Lobby* lobby = LobbyManager::getLobby(lobbyId);
+    int sessionId = ClientManager::getClientByAddress(senderAddr)->lobbyId;
+	Session* session = SessionManager::GetSession(sessionId);
 
     Engine::Instance().Server()->SendToMultiple(
-        LobbyManager::getClientsInLobby(lobby->id),
+        session->clientsAddress,
         serializer.getBuffer(),
         getClassName(),
-        ClientManager::getClientByAddress(senderAddr));
+        &senderAddr);
 }
 
 

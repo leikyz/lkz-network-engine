@@ -25,35 +25,35 @@ void ClientGameSceneLoadedMessage::deserialize(Deserializer& deserializer)
 
 void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr)
 {
-    Client* client = ClientManager::getClientByAddress(senderAddr);
+ //   Client* client = ClientManager::getClientByAddress(senderAddr);
 
-	Lobby* lobby = LobbyManager::getLobby(client->lobbyId);
+	//Session* session = SessionManager::GetSession(client->lobbyId);
 
-    if (!client)
-    {
-        Logger::Log("ClientGameSceneLoadedMessage: Client not found.", LogType::Warning);
-        return;
-	}
+ //   if (!client)
+ //   {
+ //       Logger::Log("ClientGameSceneLoadedMessage: Client not found.", LogType::Warning);
+ //       return;
+	//}
 
-    if (!lobby)
-    {
-        Logger::Log("ClientGameSceneLoadedMessage: Lobby not found.", LogType::Warning);
-        return;
-    }
+ //   if (!lobby)
+ //   {
+ //       Logger::Log("ClientGameSceneLoadedMessage: Lobby not found.", LogType::Warning);
+ //       return;
+ //   }
 
-    Serializer serializer;
-    serialize(serializer);
+ //   Serializer serializer;
+ //   serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), serializer.getBuffer(), getClassName());
+ //   Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), serializer.getBuffer(), getClassName());
 
-	lobby->gameLoaded = true;
-	// first wave start
+	//lobby->gameLoaded = true;
+	//// first wave start
 
-    ChangeWaveMessage changeWaveMsg(1);
-    changeWaveMsg.serialize(serializer);
+ //   ChangeWaveMessage changeWaveMsg(1);
+ //   changeWaveMsg.serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(
-        LobbyManager::getClientsInLobby(lobby->id),
-        serializer.getBuffer(),
-        changeWaveMsg.getClassName());
+ //   Engine::Instance().Server()->SendToMultiple(
+ //       LobbyManager::getClientsInLobby(lobby->id),
+ //       serializer.getBuffer(),
+ //       changeWaveMsg.getClassName());
 }
