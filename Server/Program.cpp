@@ -45,8 +45,6 @@ int main()
 
     ThreadManager::CreatePool("io", 1, [server](float) { server->Poll(); }, false);
     ThreadManager::CreatePool("profiler", 1, [&](float) { engine.GetProfiler()->Poll(); }, true);
-    ThreadManager::CreatePool("message", 8);
-    ThreadManager::CreatePool("matchmaking", 1);
     ThreadManager::CreatePool("pathfinding", 2);
     ThreadManager::CreatePool("simulation", 1, [&](float)
         {

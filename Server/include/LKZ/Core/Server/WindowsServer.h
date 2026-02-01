@@ -17,6 +17,7 @@
 #include <mswsock.h>
 #include <span>
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "Mswsock.lib")
 
 enum class IO_OPERATION { RECEIVE_UDP, SEND_UDP, ACCEPT_TCP, RECEIVE_TCP };
 
@@ -24,6 +25,11 @@ enum class IO_OPERATION { RECEIVE_UDP, SEND_UDP, ACCEPT_TCP, RECEIVE_TCP };
 struct BaseIo {
     OVERLAPPED overlapped{}; 
     IO_OPERATION opType;
+
+    inline void ResetOverlapped()
+    {
+        memset(&overlapped, 0, sizeof(OVERLAPPED));
+    }
 };
 
 // UDP receive I/O data structure
@@ -61,19 +67,31 @@ struct ReceiveTCPIoData : public BaseIo {
     SOCKET socket;
     uint8_t buffer[8192];
     WSABUF wsabuf;
+    sockaddr_in clientAddr;
 
-    ReceiveTCPIoData(SOCKET s) : socket(s) {
+    ReceiveTCPIoData(SOCKET s, const sockaddr_in& addr) : socket(s) {
         opType = IO_OPERATION::RECEIVE_TCP;
         wsabuf.buf = (CHAR*)buffer;
         wsabuf.len = sizeof(buffer);
     }
-};
 
+    
+};
+struct AcceptIoData : public BaseIo {
+    SOCKET listenSocket;
+    SOCKET acceptSocket;
+    // Buffer requis par AcceptEx pour stocker les adresses locales et distantes
+    uint8_t addressBuffer[(sizeof(sockaddr_in) + 16) * 2];
+
+    AcceptIoData(SOCKET lSocket) : listenSocket(lSocket), acceptSocket(INVALID_SOCKET) {
+        opType = IO_OPERATION::ACCEPT_TCP;
+    }
+};
 // Windows-specific server implementation using IOCP
 class WindowsServer : public INetworkInterface 
 {
 public:
-    explicit WindowsServer(int port, size_t bufferSize = Constants::NETWORK_BUFFER_SIZE);
+    explicit WindowsServer(int port);
     ~WindowsServer() override;
 
     void Start() override;
@@ -85,8 +103,8 @@ private:
     void InitIOCP();
 
 	// Posts a receive operation to the IOCP for the given ioData
-    void PostReceive(ReceiveUDPIoData* ioData);
-
+    void PostReceive(BaseIo* baseIo);
+    void PostAccept();
 	// Handles completed I/O operations from the IOCP
 
 
@@ -97,10 +115,18 @@ private:
 
     HANDLE completionPort = nullptr;
 
-    std::vector<std::unique_ptr<ReceiveUDPIoData>> ioDataPool;
-    size_t bufferSize;
+    std::vector<std::unique_ptr<ReceiveUDPIoData>> receiveUDPPool;
+
+    std::vector<std::unique_ptr<SendUDPIoData>> sendUDPPool;
+    std::queue<SendUDPIoData*> availableSends;
+    std::mutex sendPoolMutex;
 
     bool running = false;
+
+    // Test 
+    std::atomic<int> pendingReceives{ 0 };
+
+
 };
 
 #endif // WINDOWS_SERVER_H
