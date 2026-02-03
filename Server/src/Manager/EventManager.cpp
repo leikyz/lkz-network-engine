@@ -1,5 +1,6 @@
 ﻿
 #include <iostream>
+#include "LKZ/Utility/Logger.h"
 #include "LKZ/Core/Manager/EventManager.h"
 #include "LKZ/Protocol/Message/Approach/CreateClientMessage.h"
 #include "LKZ/Protocol/Message/Approach/ServerInformationsMessage.h"
@@ -74,7 +75,7 @@ void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_
 
 	// First byte is the message ID
     uint8_t id = data[0];
-
+	std::cout << "Processing message ID: " << static_cast<int>(id) << std::endl;
     if (!messageHandlers[id]) {
         std::cout << "failed: " << static_cast<int>(id) << std::endl;
         return;
@@ -97,8 +98,7 @@ void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_i
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(senderAddr.sin_addr), ip, INET_ADDRSTRLEN);
     // added +1 because we removed 1 byte before handled event (ID)
-    //Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, buffer.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);
-
+    Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, data.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);
 	// Parse and process the message
     msg.deserialize(deserializer);
     msg.process(senderAddr);

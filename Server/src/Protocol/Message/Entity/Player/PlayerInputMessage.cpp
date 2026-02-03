@@ -25,9 +25,9 @@ std::vector<uint8_t>& PlayerInputMessage::serialize(Serializer& serializer) cons
     serializer.writeFloat(inputX);
     serializer.writeFloat(inputY);
     serializer.writeFloat(yaw);
-	serializer.writeBool(isSprinting);
-	serializer.writeBool(isAiming);
-	serializer.writeBool(isArmed);
+    serializer.writeBool(isSprinting);
+    serializer.writeBool(isAiming);
+    serializer.writeBool(isArmed);
     serializer.writeInt(sequenceId);
 
     return serializer.getBuffer();
@@ -39,9 +39,9 @@ void PlayerInputMessage::deserialize(Deserializer& deserializer)
     inputX = deserializer.readFloat();
     inputY = deserializer.readFloat();
     yaw = deserializer.readFloat();
-	isSprinting = deserializer.readBool();
-	isAiming = deserializer.readBool();
-	isArmed = deserializer.readBool();
+    isSprinting = deserializer.readBool();
+    isAiming = deserializer.readBool();
+    isArmed = deserializer.readBool();
     sequenceId = deserializer.readInt();
 }
 
@@ -61,9 +61,9 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr)
     packet.inputX = inputX;
     packet.inputY = inputY;
     packet.yaw = yaw;
-	packet.isAiming = isAiming;
-	packet.isRunning = isSprinting;
-	packet.isArmed = isArmed;
+    packet.isAiming = isAiming;
+    packet.isRunning = isSprinting;
+    packet.isArmed = isArmed;
     packet.sequenceId = sequenceId;
 
     CommandQueue::Instance().Push([entity, packet, currentYaw]()

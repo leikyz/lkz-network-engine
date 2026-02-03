@@ -71,7 +71,8 @@ void WindowsServer::Start()
 
     InitIOCP();
 
-    std::cout << "[WindowsServer] Server started on port " << port << "\n";
+    std::cout << "[WindowsServer] UDP started on port " << Constants::UDP_PORT << "\n";
+    std::cout << "[WindowsServer] TCP started on port " << Constants::TCP_PORT << "\n";
 }
 
 void WindowsServer::InitIOCP() 

@@ -33,7 +33,7 @@ int main()
     EntityManager& entityManager = EntityManager::Instance();
     SystemManager& systemManager = SystemManager::Instance();
 
-//    ThreadManager::CreatePool("logger", 1);
+    ThreadManager::CreatePool("logger", 1);
 
     World* world = new World();
     engine.SetWorld(world);
