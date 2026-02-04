@@ -3,8 +3,7 @@
 LKZ Network is a fast, efficient networking solution built on **UDP**, specifically engineered for **high-performance real-time applications**.
 It features an advanced **asynchronous event-driven system** designed to handle complex message flows with minimal overhead and **ultra-low latency**.
 
-Originally developed as a **final-year project**, this C++ network engine is currently being integrated into a **Unity-based game**.
-The next objective is to **decouple the core logic into a standalone, engine-agnostic library**, making it compatible with any C++ environment, including **Unreal Engine**.
+This C++ network engine is currently being integrated into a **Unity-based game**.
 
 ---
 
