@@ -16,7 +16,7 @@ public:
     using MessageHandler = void(*)(std::span<const uint8_t>, const sockaddr_in&);
 
     static void BindEvents();
-    static void processMessage(std::span<const uint8_t>, const sockaddr_in& senderAddr);
+    static void processMessage(std::span<const uint8_t>, const sockaddr_in& senderAddr, bool isReliable = false);
 
 private:
 	// Array of message handlers indexed by message ID (0-255) can handle up to 256 different message types

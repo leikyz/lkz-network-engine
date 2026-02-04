@@ -426,7 +426,7 @@ void WindowsServer::Poll()
         ReceiveTCPIoData* ioData = static_cast<ReceiveTCPIoData*>(base);
 
         if (success && bytesTransferred > 0) {
-            EventManager::processMessage(ioData->buffer, ioData->clientAddr);
+            EventManager::processMessage(ioData->buffer, ioData->clientAddr, true);
 
             // Re-prime the TCP receive: wait for more data on the same socket
             PostReceive(ioData);

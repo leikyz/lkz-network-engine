@@ -1,6 +1,7 @@
 #include "LKZ/Protocol/Message/Approach/CreateClientMessage.h"
 #include <Common/ProfilerProtocol.h>
 #include <LKZ/Protocol/Message/Profiler/ProfilerClientCreatedMessage.h>
+#include <iostream>
 
 CreateClientMessage::CreateClientMessage() {}
 
@@ -24,15 +25,17 @@ void CreateClientMessage::process(const sockaddr_in& senderAddr)
 {
     ClientManager::addClient(senderAddr);
 
-	Client* client = ClientManager::getClientByAddress(senderAddr);
+    std::cout << "[CreateClientMessage] New client connected: ";
 
-    Serializer serializer;
-    serialize(serializer);
+	//Client* client = ClientManager::getClientByAddress(senderAddr);
 
-    Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());
+ //   Serializer serializer;
+ //   serialize(serializer);
 
-    ProfilerClientCreatedMessage profilerMsg;
-	profilerMsg.serialize(serializer);
+ //   Engine::Instance().Server()->Send(senderAddr, serializer.getBuffer(), getClassName());
 
-	Engine::Instance().GetProfiler()->Broadcast(serializer.getBuffer());
+ //   ProfilerClientCreatedMessage profilerMsg;
+	//profilerMsg.serialize(serializer);
+
+	//Engine::Instance().GetProfiler()->Broadcast(serializer.getBuffer());
 }
