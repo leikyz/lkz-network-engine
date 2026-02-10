@@ -29,6 +29,7 @@
 #include <LKZ/Protocol/Message/Approach/ClientGameSceneLoadedMessage.h>
 #include <LKZ/Protocol/Message/Profiler/ProfilerClientCreatedMessage.h>
 #include <LKZ/Protocol/Message/Profiler/ProfilerNetworkPerformanceMessage.h>
+#include <LKZ/Protocol/Message/Session/CreateSessionMessage.h>
 
 EventManager::MessageHandler EventManager::messageHandlers[256] = { nullptr };
 
@@ -59,6 +60,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<ClientGameSceneLoadedMessage>(22);
     EventManager::registerHandler<ProfilerClientCreatedMessage>(23);
     EventManager::registerHandler<ProfilerClientCreatedMessage>(24);
+    EventManager::registerHandler<CreateSessionMessage>(26);
 }
 
 template<typename T>
