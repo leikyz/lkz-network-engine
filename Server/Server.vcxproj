@@ -183,6 +183,7 @@
     <ClCompile Include="src\Protocol\Message\Profiler\ProfilerClientCreatedMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Profiler\ProfilerNetworkPerformanceMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Session\CreateSessionMessage.cpp" />
+    <ClCompile Include="src\Protocol\Message\Session\JoinSessionMessage.cpp" />
     <ClCompile Include="src\Simulation\Math\MathUtils.cpp" />
     <ClCompile Include="src\Simulation\NavMesh\NavMeshLoader.cpp" />
     <ClCompile Include="src\Simulation\World.cpp">
@@ -239,6 +240,7 @@
     <ClInclude Include="include\LKZ\Protocol\Message\Profiler\ProfilerClientCreatedMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Profiler\ProfilerNetworkPerformanceMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Session\CreateSessionMessage.h" />
+    <ClInclude Include="include\LKZ\Protocol\Message\Session\JoinSessionMessage.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\MathUtils.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\Quaternion.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\Vector.h" />

@@ -30,6 +30,7 @@
 #include <LKZ/Protocol/Message/Profiler/ProfilerClientCreatedMessage.h>
 #include <LKZ/Protocol/Message/Profiler/ProfilerNetworkPerformanceMessage.h>
 #include <LKZ/Protocol/Message/Session/CreateSessionMessage.h>
+#include <LKZ/Protocol/Message/Session/JoinSessionMessage.h>
 
 EventManager::MessageHandler EventManager::messageHandlers[256] = { nullptr };
 
@@ -61,6 +62,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<ProfilerClientCreatedMessage>(23);
     EventManager::registerHandler<ProfilerClientCreatedMessage>(24);
     EventManager::registerHandler<CreateSessionMessage>(26);
+    EventManager::registerHandler<JoinSessionMessage>(28);
 }
 
 template<typename T>
@@ -78,19 +80,22 @@ void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_
 	// First byte is the message ID
     uint8_t id;
 
-    if (isReliable)
-		id = data[2]; // Skip the first two bytes for reliable messages 
-    else
-		id = data[0];
+    try
+    {
+        if (isReliable) {
+            id = data[2];
+            std::span<const uint8_t> payload = data.subspan(3);
+            messageHandlers[id](payload, senderAddr);
+        }
+        else {
+            id = data[0];
+            std::span<const uint8_t> payload = data.subspan(1);
+            messageHandlers[id](payload, senderAddr);
+        }
 
-	std::cout << "Processing message ID: " << static_cast<int>(id) << std::endl;
-    if (!messageHandlers[id]) {
-        std::cout << "failed: " << static_cast<int>(id) << std::endl;
-        return;
-    }
-
-
-    messageHandlers[id](data, senderAddr);
+        std::cout << "Processing message ID: " << static_cast<int>(id) << std::endl;
+	}
+	catch (const std::exception& ex) { std::cerr << "Error processing message ID " << static_cast<int>(id) << ": " << ex.what() << std::endl; }
 }
 
 

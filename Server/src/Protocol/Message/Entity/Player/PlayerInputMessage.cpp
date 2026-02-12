@@ -47,48 +47,48 @@ void PlayerInputMessage::deserialize(Deserializer& deserializer)
 
 void PlayerInputMessage::process(const sockaddr_in& senderAddr)
 {
-    auto* client = ClientManager::getClientByAddress(senderAddr);
-    if (!client) return;
+    //auto* client = ClientManager::getClientByAddress(senderAddr);
+    //if (!client) return;
 
-    Session* session = SessionManager::GetSession(client->lobbyId);
-    if (!session) return;
+    //Session* session = SessionManager::GetSession(client->lobbyId);
+    //if (!session) return;
 
-    // Capture data locally to pass into the lambda
-    Entity entity = entityId;
-    float currentYaw = yaw;
+    //// Capture data locally to pass into the lambda
+    //Entity entity = entityId;
+    //float currentYaw = yaw;
 
-    PlayerInputData packet;
-    packet.inputX = inputX;
-    packet.inputY = inputY;
-    packet.yaw = yaw;
-    packet.isAiming = isAiming;
-    packet.isRunning = isSprinting;
-    packet.isArmed = isArmed;
-    packet.sequenceId = sequenceId;
+    //PlayerInputData packet;
+    //packet.inputX = inputX;
+    //packet.inputY = inputY;
+    //packet.yaw = yaw;
+    //packet.isAiming = isAiming;
+    //packet.isRunning = isSprinting;
+    //packet.isArmed = isArmed;
+    //packet.sequenceId = sequenceId;
 
-    CommandQueue::Instance().Push([entity, packet, currentYaw]()
-        {
-            auto& components = ComponentManager::Instance();
+    //CommandQueue::Instance().Push([entity, packet, currentYaw]()
+    //    {
+    //        auto& components = ComponentManager::Instance();
 
-            // Check if entity still exists (it might have disconnected by the time this runs)
-            if (components.playerInputs.find(entity) != components.playerInputs.end())
-            {
-                // Safe to push_back now because we are on the main thread
-                components.playerInputs[entity].inputQueue.push_back(packet);
-            }
+    //        // Check if entity still exists (it might have disconnected by the time this runs)
+    //        if (components.playerInputs.find(entity) != components.playerInputs.end())
+    //        {
+    //            // Safe to push_back now because we are on the main thread
+    //            components.playerInputs[entity].inputQueue.push_back(packet);
+    //        }
 
-            if (components.rotations.find(entity) != components.rotations.end())
-            {
-                components.rotations[entity].rotation.y = currentYaw;
-            }
-        });
+    //        if (components.rotations.find(entity) != components.rotations.end())
+    //        {
+    //            components.rotations[entity].rotation.y = currentYaw;
+    //        }
+    //    });
 
-    Serializer serializer;
-    serialize(serializer);
+    //Serializer serializer;
+    //serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(
-        session->clientsAddress,
-        serializer.getBuffer(),
-        getClassName(),
-        &senderAddr);
+    //Engine::Instance().Server()->SendToMultiple(
+    //    session->clientsAddress,
+    //    serializer.getBuffer(),
+    //    getClassName(),
+    //    &senderAddr);
 }

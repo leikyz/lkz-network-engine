@@ -24,6 +24,6 @@ void CreateSessionMessage::deserialize(Deserializer& deserializer)
 
 void CreateSessionMessage::process(const sockaddr_in& senderAddr)
 {
-    std::cout << "Client found: " << static_cast<int>(clientsCount) << std::endl;
+    SessionManager::CreateSession(token, clientIds);
 
 }

@@ -29,7 +29,7 @@ void PlayerShootingMessage::deserialize(Deserializer& deserializer)
 
 void PlayerShootingMessage::process(const sockaddr_in& senderAddr)
 {
-    Serializer serializer;
+   /* Serializer serializer;
     serialize(serializer);
 
     int sessionId = ClientManager::getClientByAddress(senderAddr)->lobbyId;
@@ -39,7 +39,7 @@ void PlayerShootingMessage::process(const sockaddr_in& senderAddr)
         session->clientsAddress,
         serializer.getBuffer(),
         getClassName(),
-        &senderAddr);
+        &senderAddr);*/
 }
 
 

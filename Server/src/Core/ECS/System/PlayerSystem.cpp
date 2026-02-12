@@ -54,133 +54,133 @@ void UpdateVelocity(Vector3& velocity, const PlayerInputData& input, float speed
 
 void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 {
-    World& world = Engine::Instance().GetWorld();
-    dtNavMeshQuery* navQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
-    const dtQueryFilter* filter = world.getCrowd() ? world.getCrowd()->getFilter(0) : nullptr;
+    //World& world = Engine::Instance().GetWorld();
+    //dtNavMeshQuery* navQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
+    //const dtQueryFilter* filter = world.getCrowd() ? world.getCrowd()->getFilter(0) : nullptr;
 
-    const float extents[3] = { 2.0f, 4.0f, 2.0f };
+    //const float extents[3] = { 2.0f, 4.0f, 2.0f };
 
-    for (auto& [entity, inputComp] : components.playerInputs)
-    {
-        Session* session = EntityManager::Instance().GetSessionByEntity(entity);
-        if (!session) continue;
+    //for (auto& [entity, inputComp] : components.playerInputs)
+    //{
+    //    Session* session = EntityManager::Instance().GetSessionByEntity(entity);
+    //    if (!session) continue;
 
-        Client* ownerClient = nullptr;/* = SessionManager::getClientByEntityId(entity);*/
-        if (!ownerClient) continue;
+    //    Client* ownerClient = nullptr;/* = SessionManager::getClientByEntityId(entity);*/
+    //    if (!ownerClient) continue;
 
-        auto& pos = components.positions[entity].position;
-        Vector3& vel = inputComp.currentVelocity;
+    //    auto& pos = components.positions[entity].position;
+    //    Vector3& vel = inputComp.currentVelocity;
 
-        std::sort(inputComp.inputQueue.begin(), inputComp.inputQueue.end(),
-            [](const PlayerInputData& a, const PlayerInputData& b) {
-                return a.sequenceId < b.sequenceId;
-            });
+    //    std::sort(inputComp.inputQueue.begin(), inputComp.inputQueue.end(),
+    //        [](const PlayerInputData& a, const PlayerInputData& b) {
+    //            return a.sequenceId < b.sequenceId;
+    //        });
 
-        int lastProcessedSeq = -1;
-        bool hasProcessed = false;
+    //    int lastProcessedSeq = -1;
+    //    bool hasProcessed = false;
 
-        dtPolyRef currentPolyRef = 0;
-        float startPos[3] = { pos.x, pos.y, pos.z };
+    //    dtPolyRef currentPolyRef = 0;
+    //    float startPos[3] = { pos.x, pos.y, pos.z };
 
-        if (navQuery && filter)
-        {
-            navQuery->findNearestPoly(startPos, extents, filter, &currentPolyRef, startPos);
-            if (currentPolyRef != 0)
-            {
-                pos.y = startPos[1];
-            }
-        }
+    //    if (navQuery && filter)
+    //    {
+    //        navQuery->findNearestPoly(startPos, extents, filter, &currentPolyRef, startPos);
+    //        if (currentPolyRef != 0)
+    //        {
+    //            pos.y = startPos[1];
+    //        }
+    //    }
 
-        for (const auto& input : inputComp.inputQueue)
-        {
-            if (input.sequenceId <= inputComp.lastExecutedSequenceId) continue;
+    //    for (const auto& input : inputComp.inputQueue)
+    //    {
+    //        if (input.sequenceId <= inputComp.lastExecutedSequenceId) continue;
 
-            float currentSpeed = Constants::PLAYER_MOVE_SPEED;
+    //        float currentSpeed = Constants::PLAYER_MOVE_SPEED;
 
-            if (input.isAiming)
-            {
-                currentSpeed *= Constants::PLAYER_AIM_SPEED_MULTIPLICATOR;
-            }
-            else if (input.isArmed)
-            {
-                if (input.isRunning)
-                    currentSpeed *= Constants::PLAYER_RUN_ARMED_SPEED_MULTIPLICATOR;
-                else
-                    currentSpeed *= Constants::PLAYER_WALK_ARMED_SPEED_MULTIPLICATOR;
-            }
-            else
-            {
-                if (input.isRunning)
-                    currentSpeed *= Constants::PLAYER_RUN_SPEED_MULTIPLICATOR;
-                else
-                    currentSpeed *= Constants::PLAYER_WALK_SPEED_MULTIPLICATOR;
-            }
+    //        if (input.isAiming)
+    //        {
+    //            currentSpeed *= Constants::PLAYER_AIM_SPEED_MULTIPLICATOR;
+    //        }
+    //        else if (input.isArmed)
+    //        {
+    //            if (input.isRunning)
+    //                currentSpeed *= Constants::PLAYER_RUN_ARMED_SPEED_MULTIPLICATOR;
+    //            else
+    //                currentSpeed *= Constants::PLAYER_WALK_ARMED_SPEED_MULTIPLICATOR;
+    //        }
+    //        else
+    //        {
+    //            if (input.isRunning)
+    //                currentSpeed *= Constants::PLAYER_RUN_SPEED_MULTIPLICATOR;
+    //            else
+    //                currentSpeed *= Constants::PLAYER_WALK_SPEED_MULTIPLICATOR;
+    //        }
 
-            UpdateVelocity(vel, input, currentSpeed, fixedDeltaTime);
+    //        UpdateVelocity(vel, input, currentSpeed, fixedDeltaTime);
 
-            if (navQuery && filter && currentPolyRef != 0)
-            {
-                float endPos[3];
-                endPos[0] = startPos[0] + (vel.x * fixedDeltaTime);
-                endPos[1] = startPos[1];
-                endPos[2] = startPos[2] + (vel.z * fixedDeltaTime);
+    //        if (navQuery && filter && currentPolyRef != 0)
+    //        {
+    //            float endPos[3];
+    //            endPos[0] = startPos[0] + (vel.x * fixedDeltaTime);
+    //            endPos[1] = startPos[1];
+    //            endPos[2] = startPos[2] + (vel.z * fixedDeltaTime);
 
-                float resultPos[3];
-                dtPolyRef visitedPolys[16];
-                int nVisited = 0;
+    //            float resultPos[3];
+    //            dtPolyRef visitedPolys[16];
+    //            int nVisited = 0;
 
-                navQuery->moveAlongSurface(currentPolyRef, startPos, endPos, filter, resultPos, visitedPolys, &nVisited, 16);
+    //            navQuery->moveAlongSurface(currentPolyRef, startPos, endPos, filter, resultPos, visitedPolys, &nVisited, 16);
 
-                pos.x = resultPos[0];
-                pos.y = resultPos[1];
-                pos.z = resultPos[2];
+    //            pos.x = resultPos[0];
+    //            pos.y = resultPos[1];
+    //            pos.z = resultPos[2];
 
-                startPos[0] = resultPos[0];
-                startPos[1] = resultPos[1];
-                startPos[2] = resultPos[2];
+    //            startPos[0] = resultPos[0];
+    //            startPos[1] = resultPos[1];
+    //            startPos[2] = resultPos[2];
 
-                if (nVisited > 0)
-                {
-                    currentPolyRef = visitedPolys[nVisited - 1];
-                }
-            }
-            else
-            {
-                pos.x += vel.x * fixedDeltaTime;
-                pos.z += vel.z * fixedDeltaTime;
-            }
+    //            if (nVisited > 0)
+    //            {
+    //                currentPolyRef = visitedPolys[nVisited - 1];
+    //            }
+    //        }
+    //        else
+    //        {
+    //            pos.x += vel.x * fixedDeltaTime;
+    //            pos.z += vel.z * fixedDeltaTime;
+    //        }
 
-           /* inputComp.isAiming = input.isAiming;
-            inputComp.isRunning = input.isRunning;
-            inputComp.isArmed = input.isArmed;*/
+    //       /* inputComp.isAiming = input.isAiming;
+    //        inputComp.isRunning = input.isRunning;
+    //        inputComp.isArmed = input.isArmed;*/
 
-            inputComp.lastExecutedSequenceId = input.sequenceId;
-            lastProcessedSeq = input.sequenceId;
-            hasProcessed = true;
-        }
+    //        inputComp.lastExecutedSequenceId = input.sequenceId;
+    //        lastProcessedSeq = input.sequenceId;
+    //        hasProcessed = true;
+    //    }
 
-        inputComp.inputQueue.clear();
+    //    inputComp.inputQueue.clear();
 
-        if (hasProcessed)
-        {
-            Serializer s;
+    //    if (hasProcessed)
+    //    {
+    //        Serializer s;
 
-            MoveEntityMessage moveMsg(entity, pos.x, pos.y, pos.z);
-            moveMsg.serialize(s);
+    //        MoveEntityMessage moveMsg(entity, pos.x, pos.y, pos.z);
+    //        moveMsg.serialize(s);
 
-            Engine::Instance().Server()->SendToMultiple(
-                session->clientsAddress,
-                s.getBuffer(),
-                moveMsg.getClassName()
-               /* ownerClient*/);
+    //        Engine::Instance().Server()->SendToMultiple(
+    //            session->clientsAddress,
+    //            s.getBuffer(),
+    //            moveMsg.getClassName()
+    //           /* ownerClient*/);
 
-            LastEntityPositionMessage msg(entity,pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,lastProcessedSeq);
-            msg.serialize(s);
+    //        LastEntityPositionMessage msg(entity,pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,lastProcessedSeq);
+    //        msg.serialize(s);
 
-            Engine::Instance().Server()->Send(
-                ownerClient->address, 
-                s.getBuffer(), 
-                msg.getClassName());
-        }
-    }
+    //        Engine::Instance().Server()->Send(
+    //            ownerClient->address, 
+    //            s.getBuffer(), 
+    //            msg.getClassName());
+    //    }
+    //}
 }

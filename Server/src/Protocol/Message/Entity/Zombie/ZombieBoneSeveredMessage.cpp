@@ -36,7 +36,7 @@ void ZombieBoneSeveredMessage::deserialize(Deserializer& deserializer)
 void ZombieBoneSeveredMessage::process(const sockaddr_in& senderAddr)
 {
 
-    Client* client = ClientManager::getClientByAddress(senderAddr);
+   /* Client* client = ClientManager::getClientByAddress(senderAddr);
     if (!client) return;
 
     Session* session = SessionManager::GetSession(client->lobbyId);
@@ -45,5 +45,5 @@ void ZombieBoneSeveredMessage::process(const sockaddr_in& senderAddr)
     Serializer serializer;
     serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(session->clientsAddress, serializer.getBuffer(), getClassName(), &senderAddr);
+    Engine::Instance().Server()->SendToMultiple(session->clientsAddress, serializer.getBuffer(), getClassName(), &senderAddr);*/
 }

@@ -187,7 +187,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                         msg.serialize(s);
 
                         Engine::Instance().Server()->SendToMultiple(
-                            session->clientsAddress,
+                            session->connectedAddresses,
                             s.getBuffer(),
                             msg.getClassName()
                         );
@@ -207,7 +207,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
             Serializer s;
             msg.serialize(s);
            /* Engine::Instance().GetProfiler()->Broadcast(s.getBuffer());*/
-            Engine::Instance().Server()->SendToMultiple(session->clientsAddress, s.getBuffer(), msg.getClassName());
+            Engine::Instance().Server()->SendToMultiple(session->connectedAddresses, s.getBuffer(), msg.getClassName());
         }
     }
 }

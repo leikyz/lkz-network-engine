@@ -111,7 +111,7 @@ private:
 private:
     int port;
     SOCKET udpSocket = INVALID_SOCKET;
-    SOCKET tcpSocket = INVALID_SOCKET; // HTTP 
+    SOCKET tcpSocket = INVALID_SOCKET;  
 
     HANDLE completionPort = nullptr;
 

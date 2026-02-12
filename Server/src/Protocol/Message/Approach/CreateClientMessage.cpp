@@ -23,9 +23,9 @@ void CreateClientMessage::deserialize(Deserializer& deserializer)
 
 void CreateClientMessage::process(const sockaddr_in& senderAddr)
 {
-    ClientManager::addClient(senderAddr);
+   /* ClientManager::addClient(senderAddr);
 
-    std::cout << "[CreateClientMessage] New client connected: ";
+    std::cout << "[CreateClientMessage] New client connected: ";*/
 
 	//Client* client = ClientManager::getClientByAddress(senderAddr);
 
