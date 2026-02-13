@@ -25,9 +25,15 @@ struct Session
     std::vector<uint32_t> authorizedClientIds;
     std::vector<uint32_t> connectedIds;
     std::vector<sockaddr_in> connectedAddresses;
+    std::vector<SOCKET> connectedTCPSocket;
 
     Entity gameWaveEntity;
     int nextEntityId = 1;
+
+    Session(uint32_t sessionId, std::span<const uint32_t> authIds)
+		: id(sessionId), authorizedClientIds(authIds.begin(), authIds.end()), gameWaveEntity(0)
+    {
+    }
 };
 
 class SessionManager
@@ -39,7 +45,7 @@ public:
 
 	static void RemoveSession(uint32_t sessionId);
     static void RemoveClientFromSession(uint32_t sessionId, uint32_t clientId);
-	static bool JoinSession(uint32_t sessionId, uint32_t clientId); 
+	static bool JoinSession(uint32_t sessionId, uint32_t clientId, SOCKET tcpSocket);
 
     static Session* GetSession(uint32_t sessionId);
     static size_t GetSessionCount();

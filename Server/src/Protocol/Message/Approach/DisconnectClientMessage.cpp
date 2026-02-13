@@ -21,7 +21,7 @@ void DisconnectClientMessage::deserialize(Deserializer& deserializer)
 
 }
 
-void DisconnectClientMessage::process(const sockaddr_in& senderAddr)
+void DisconnectClientMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    /* MatchmakingManager::RemovePlayerFromQueue(senderAddr);
 

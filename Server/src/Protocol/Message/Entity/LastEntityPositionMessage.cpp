@@ -36,7 +36,7 @@ void LastEntityPositionMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void LastEntityPositionMessage::process(const sockaddr_in& senderAddr)
+void LastEntityPositionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 }
 

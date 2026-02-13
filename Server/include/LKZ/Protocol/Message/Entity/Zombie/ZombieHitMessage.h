@@ -22,7 +22,7 @@ struct ZombieHitMessage : public Message
 
     std::vector<uint8_t>& serialize(Serializer& serializer) const override;
     void deserialize(Deserializer& deserializer) override;
-    void process(const sockaddr_in& senderAddr) override;
+    void process(const sockaddr_in& senderAddr, SOCKET tcpSocket) override;
 };
 
 #endif // ZOMBIE_BONE_SEVERED_MESSAGE_H

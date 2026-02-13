@@ -22,7 +22,7 @@ void ServerInformationsMessage::deserialize(Deserializer& deserializer)
     deserializer.readInt();*/
 }
 
-void ServerInformationsMessage::process(const sockaddr_in& senderAddr)
+void ServerInformationsMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     /*LobbyManager::createLobby();
 

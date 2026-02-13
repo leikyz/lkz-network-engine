@@ -31,7 +31,7 @@ void RotateEntityMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void RotateEntityMessage::process(const sockaddr_in& senderAddr)
+void RotateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
  /*   auto* client = ClientManager::getClientByAddress(senderAddr);
     if (!client) return;

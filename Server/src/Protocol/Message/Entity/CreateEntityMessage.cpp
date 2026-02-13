@@ -34,7 +34,7 @@ void CreateEntityMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void CreateEntityMessage::process(const sockaddr_in& senderAddr)
+void CreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     
     

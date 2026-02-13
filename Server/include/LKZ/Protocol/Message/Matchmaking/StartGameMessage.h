@@ -5,7 +5,7 @@
 
 struct StartGameMessage : public Message
 {
-    static constexpr uint8_t ID = 5;
+    static constexpr uint8_t ID = 25;
 
     StartGameMessage();
 
@@ -15,7 +15,7 @@ struct StartGameMessage : public Message
 
     std::vector<uint8_t>& serialize(Serializer& serializer) const override;
     void deserialize(Deserializer& deserializer) override;
-    void process(const sockaddr_in& senderAddr) override;
+    void process(const sockaddr_in& senderAddr, SOCKET tcpSocket) override;
 };
 
 #endif // START_GAME_MESSAGE_H

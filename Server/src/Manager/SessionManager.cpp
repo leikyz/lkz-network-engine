@@ -22,8 +22,8 @@ void SessionManager::CreateSession(uint32_t id, std::span<const uint32_t> author
 {
     std::unique_lock lock(m_sessionMutex);
     int sessionId = id;
-	m_sessions.emplace_back(sessionId);
-
+	m_sessions.emplace_back(sessionId, authorizedIds);
+	m_idToIndex[sessionId] = m_sessions.size() - 1; // Map session ID to its index in the vector     
     std::cout << "[SessionManager] Created session with ID: " << sessionId << std::endl;
 }
 
@@ -87,7 +87,7 @@ void SessionManager::RemoveClientFromSession(uint32_t sessionId, uint32_t client
     }
 }
 
-bool SessionManager::JoinSession(uint32_t sessionId, uint32_t clientId)
+bool SessionManager::JoinSession(uint32_t sessionId, uint32_t clientId, SOCKET tcpSocket)
 {
     std::shared_lock lock(m_sessionMutex);
 
@@ -109,6 +109,7 @@ bool SessionManager::JoinSession(uint32_t sessionId, uint32_t clientId)
     if (authIt != session.authorizedClientIds.end())
     {
         session.connectedIds.push_back(clientId);
+		session.connectedTCPSocket.push_back(tcpSocket);
         return true;
     }
 

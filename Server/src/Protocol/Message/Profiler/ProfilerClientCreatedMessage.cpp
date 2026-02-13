@@ -21,7 +21,7 @@ void ProfilerClientCreatedMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void ProfilerClientCreatedMessage::process(const sockaddr_in& senderAddr)
+void ProfilerClientCreatedMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
  
 }

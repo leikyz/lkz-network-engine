@@ -39,7 +39,7 @@ void ZombieHitMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void ZombieHitMessage::process(const sockaddr_in& senderAddr)
+void ZombieHitMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 
     /*Client* client = ClientManager::getClientByAddress(senderAddr);

@@ -41,7 +41,7 @@ void RequestCreateEntityMessage::deserialize(Deserializer& deserializer)
     entitySuperTypeId = deserializer.readByte();
 }
 
-void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr)
+void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    // Client* client = ClientManager::getClientByAddress(senderAddr);
    // if (!client)

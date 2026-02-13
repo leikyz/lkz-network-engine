@@ -42,7 +42,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<ServerInformationsMessage>(2);
     EventManager::registerHandler<DisconnectClientMessage>(3);
     EventManager::registerHandler<StartMatchmakingMessage>(4);
-    EventManager::registerHandler<StartGameMessage>(5);
+    EventManager::registerHandler<StartGameMessage>(25);
     EventManager::registerHandler<ChangeReadyStatusMessage>(6);
     EventManager::registerHandler<LeaveLobbyMessage>(7);
     EventManager::registerHandler<UpdateLobbyMessage>(8);
@@ -72,35 +72,40 @@ void EventManager::registerHandler(uint8_t id)
     messageHandlers[id] = &handleMessage<T>;
 }
 
-void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr, bool isReliable)
+void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr, bool isReliable, SOCKET tcpSocket)
 {
-    if (data.empty())
-        return;
+    if (data.empty()) return;
 
-	// First byte is the message ID
     uint8_t id;
-
     try
     {
+        std::span<const uint8_t> payload;
         if (isReliable) {
+            // Si tes messages TCP ont une taille de 2 octets au début (uint16_t)
+            // data[0-1] = taille, data[2] = ID
             id = data[2];
-            std::span<const uint8_t> payload = data.subspan(3);
-            messageHandlers[id](payload, senderAddr);
+            payload = data.subspan(3);
         }
         else {
             id = data[0];
-            std::span<const uint8_t> payload = data.subspan(1);
-            messageHandlers[id](payload, senderAddr);
+            payload = data.subspan(1);
         }
 
-        std::cout << "Processing message ID: " << static_cast<int>(id) << std::endl;
-	}
-	catch (const std::exception& ex) { std::cerr << "Error processing message ID " << static_cast<int>(id) << ": " << ex.what() << std::endl; }
+        if (messageHandlers[id]) {
+            // On passe le tcpSocket au handler
+            messageHandlers[id](payload, senderAddr, tcpSocket);
+        }
+
+        // std::cout << "Processing message ID: " << static_cast<int>(id) << std::endl;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Error processing message ID " << static_cast<int>(id) << ": " << ex.what() << std::endl;
+    }
 }
 
 
 template<typename T>
-void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr)
+void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr, SOCKET tcpSocket)
 { 
     T msg;
     Deserializer deserializer(data);
@@ -114,5 +119,5 @@ void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_i
   /*  Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, data.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);*/
 	// Parse and process the message
     msg.deserialize(deserializer);
-    msg.process(senderAddr);
+    msg.process(senderAddr, tcpSocket);
 }

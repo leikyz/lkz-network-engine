@@ -7,6 +7,7 @@ namespace Constants
 {
     // ----- Engine -----
 
+    inline constexpr int MAX_PENDING_TCP_RECEIVES = 128; // Maximum number of pending TCP receive operations
 	inline constexpr int MAX_PENDING_UDP_RECEIVES = 256; // Maximum number of pending UDP receive operations
     inline constexpr int TCP_PORT = 8081; // Must be match with go server
 	inline constexpr int UDP_PORT = 5555;    // Default server port

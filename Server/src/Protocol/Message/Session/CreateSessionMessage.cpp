@@ -22,7 +22,7 @@ void CreateSessionMessage::deserialize(Deserializer& deserializer)
     }
 }
 
-void CreateSessionMessage::process(const sockaddr_in& senderAddr)
+void CreateSessionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     SessionManager::CreateSession(token, clientIds);
 

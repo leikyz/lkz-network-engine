@@ -33,7 +33,7 @@ void ZombieBoneSeveredMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void ZombieBoneSeveredMessage::process(const sockaddr_in& senderAddr)
+void ZombieBoneSeveredMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 
    /* Client* client = ClientManager::getClientByAddress(senderAddr);

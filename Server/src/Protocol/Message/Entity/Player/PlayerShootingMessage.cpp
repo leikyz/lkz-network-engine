@@ -27,7 +27,7 @@ void PlayerShootingMessage::deserialize(Deserializer& deserializer)
     entityId = deserializer.readUInt16();
 }
 
-void PlayerShootingMessage::process(const sockaddr_in& senderAddr)
+void PlayerShootingMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    /* Serializer serializer;
     serialize(serializer);

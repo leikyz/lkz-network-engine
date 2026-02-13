@@ -16,7 +16,7 @@ struct ChangeReadyStatusMessage : public Message
 
     std::vector<uint8_t>& serialize(Serializer& serializer) const override;
     void deserialize(Deserializer& deserializer) override;
-    void process(const sockaddr_in& senderAddr) override;
+    void process(const sockaddr_in& senderAddr, SOCKET tcpSocket) override;
 };
 
 #endif // CHANGE_READY_STATUS_MESSAGE_H

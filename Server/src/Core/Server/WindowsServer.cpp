@@ -113,6 +113,12 @@ void WindowsServer::InitIOCP()
         sendUDPPool.push_back(std::move(io));
         availableSends.push(sendUDPPool.back().get());
     }
+
+    for (size_t i = 0; i < Constants::MAX_PENDING_TCP_RECEIVES; i++) {
+        auto io = std::make_unique<SendTCPIoData>(Constants::NETWORK_BUFFER_SIZE);
+        sendTCPPool.push_back(std::move(io));
+        availableTCPSends.push(sendTCPPool.back().get());
+    }
   
     listen(tcpSocket, SOMAXCONN); // Maximum pending connections
     PostAccept(); 
@@ -122,6 +128,57 @@ void WindowsServer::InitIOCP()
 #pragma endregion
 
 #pragma region Send
+
+void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> buffer)
+{
+    if (clientSocket == INVALID_SOCKET) return;
+
+    // 1. On récupère un buffer du pool (tu peux créer un pool dédié au TCP ou réutiliser l'existant)
+    // Ici, pour l'exemple, on en crée un ou on en prend un d'un pool "sendTCPPool"
+    SendTCPIoData* io = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(sendPoolMutex); // Utilise un mutex pour le pool
+        if (!availableTCPSends.empty()) {
+            io = availableTCPSends.front();
+            availableTCPSends.pop();
+        }
+    }
+
+    if (!io) {
+        std::cerr << "[TCP] Send Pool empty! Message dropped.\n";
+        return;
+    }
+
+    // 2. Préparation des données
+    size_t copySize = (std::min)(buffer.size(), io->data.size());
+    memcpy(io->data.data(), buffer.data(), copySize);
+
+    io->wsabuf.buf = reinterpret_cast<CHAR*>(io->data.data());
+    io->wsabuf.len = static_cast<ULONG>(copySize);
+    io->socket = clientSocket;
+    io->ResetOverlapped();
+
+    // 3. Appel asynchrone spécifique au TCP
+    int ret = WSASend(
+        io->socket,
+        &io->wsabuf,
+        1,
+        nullptr,
+        0,
+        &io->overlapped,
+        nullptr
+    );
+
+    if (ret == SOCKET_ERROR) {
+        int err = WSAGetLastError();
+        if (err != WSA_IO_PENDING) {
+            std::cerr << "[TCP] WSASend failed: " << err << "\n";
+            // Retour au pool immédiat en cas d'erreur fatale
+            std::lock_guard<std::mutex> lock(sendPoolMutex);
+            availableTCPSends.push(io);
+        }
+    }
+}
 
 void WindowsServer::Send(const sockaddr_in& clientAddr, std::span<const uint8_t> buffer, const char* messageName)
 {
@@ -351,6 +408,14 @@ void WindowsServer::Poll()
 
     switch (base->opType)
     {
+    case IO_OPERATION::SEND_TCP:
+    {
+        SendTCPIoData* io = static_cast<SendTCPIoData*>(base);
+        // On remet le buffer dans le pool TCP
+        std::lock_guard<std::mutex> lock(sendPoolMutex);
+        availableTCPSends.push(io);
+        break;
+    }
     case IO_OPERATION::RECEIVE_UDP:
     {
         ReceiveUDPIoData* ioData = static_cast<ReceiveUDPIoData*>(base);
@@ -358,7 +423,7 @@ void WindowsServer::Poll()
   /*      std::cout << "[UDP] Received " << bytesTransferred << std::endl;*/
         // Success and bytesTransferred > 0 means we actually received data
         if (success && bytesTransferred > 0)
-            EventManager::processMessage(ioData->buffer, ioData->clientAddr);
+            EventManager::processMessage(ioData->buffer, ioData->clientAddr, false, INVALID_SOCKET);
         pendingReceives--;
         std::cout << "Buffers currently held by Windows: " << pendingReceives.load() << std::endl;
 
@@ -420,13 +485,13 @@ void WindowsServer::Poll()
         delete acceptData;
         break;
     }
-
+    
     case IO_OPERATION::RECEIVE_TCP:
     {
         ReceiveTCPIoData* ioData = static_cast<ReceiveTCPIoData*>(base);
 
         if (success && bytesTransferred > 0) {
-            EventManager::processMessage(ioData->buffer, ioData->clientAddr, true);
+            EventManager::processMessage(ioData->buffer, ioData->clientAddr, true, ioData->socket);
 
             // Re-prime the TCP receive: wait for more data on the same socket
             PostReceive(ioData);

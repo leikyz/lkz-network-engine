@@ -23,7 +23,7 @@ void ClientGameSceneLoadedMessage::deserialize(Deserializer& deserializer)
 
 }
 
-void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr)
+void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
  //   Client* client = ClientManager::getClientByAddress(senderAddr);
 

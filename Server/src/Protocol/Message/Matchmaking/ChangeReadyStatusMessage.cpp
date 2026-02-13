@@ -22,7 +22,7 @@ void ChangeReadyStatusMessage::deserialize(Deserializer& deserializer)
 	isReady = deserializer.readBool();
 }
 
-void ChangeReadyStatusMessage::process(const sockaddr_in& senderAddr)
+void ChangeReadyStatusMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 	/*Client* currentClient = ClientManager::getClientByAddress(senderAddr);
 

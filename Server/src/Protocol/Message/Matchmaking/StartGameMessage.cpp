@@ -9,8 +9,9 @@ uint8_t StartGameMessage::getId() const
 
 std::vector<uint8_t>& StartGameMessage::serialize(Serializer& serializer) const
 {
+    serializer.writeUInt16(3);
     serializer.writeByte(ID);
-	serializer.writeByte(mapId);
+
     return serializer.getBuffer();
 }
 
@@ -18,6 +19,6 @@ void StartGameMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void StartGameMessage::process(const sockaddr_in& senderAddr)
+void StartGameMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 }

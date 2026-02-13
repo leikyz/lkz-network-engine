@@ -26,7 +26,7 @@ void ChangeWaveMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void ChangeWaveMessage::process(const sockaddr_in& senderAddr)
+void ChangeWaveMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    
 }

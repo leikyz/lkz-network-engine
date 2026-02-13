@@ -33,7 +33,7 @@ void PlayerAimTargetPositionMessage::deserialize(Deserializer& deserializer)
     posZ = deserializer.readFloat();
 }
 
-void PlayerAimTargetPositionMessage::process(const sockaddr_in& senderAddr)
+void PlayerAimTargetPositionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    /* Serializer serializer;
     serialize(serializer);

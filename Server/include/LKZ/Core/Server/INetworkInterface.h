@@ -40,7 +40,7 @@ public:
     * \param buffer
     */
     virtual void Send(const sockaddr_in& clientAddr, std::span<const uint8_t> data, const char* messageName) = 0;
-
+    virtual void SendReliable(SOCKET clientSocket, std::span<const uint8_t> buffer) = 0;
     /**
     * @brief Sends a packet to multiple clients, with an option to exclude a specific client.
     * @param clients Vector of pointers to Client objects to send the packet to.

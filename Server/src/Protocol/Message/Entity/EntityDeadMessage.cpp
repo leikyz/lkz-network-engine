@@ -33,7 +33,7 @@ void EntityDeadMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void EntityDeadMessage::process(const sockaddr_in& senderAddr)
+void EntityDeadMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     /*Client* client = ClientManager::getClientByAddress(senderAddr);
     Session* session = SessionManager::GetSession(client->lobbyId);

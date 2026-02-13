@@ -22,6 +22,6 @@ void UpdateLobbyMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void UpdateLobbyMessage::process(const sockaddr_in& senderAddr)
+void UpdateLobbyMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 }

@@ -21,7 +21,7 @@ void CreateClientMessage::deserialize(Deserializer& deserializer)
    
 }
 
-void CreateClientMessage::process(const sockaddr_in& senderAddr)
+void CreateClientMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    /* ClientManager::addClient(senderAddr);
 

@@ -19,7 +19,7 @@ void StartMatchmakingMessage::deserialize(Deserializer& deserializer)
     mapId = deserializer.readByte();
 }
 
-void StartMatchmakingMessage::process(const sockaddr_in& senderAddr)
+void StartMatchmakingMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     /*Serializer serializer;
     serialize(serializer);

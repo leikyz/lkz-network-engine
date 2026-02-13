@@ -21,7 +21,7 @@ void LeaveLobbyMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void LeaveLobbyMessage::process(const sockaddr_in& senderAddr)
+void LeaveLobbyMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
    /* Client* currentClient = ClientManager::getClientByAddress(senderAddr);
     Lobby* lobby = LobbyManager::getLobby(currentClient->lobbyId);

@@ -33,7 +33,7 @@ void MoveEntityMessage::deserialize(Deserializer& deserializer)
 }
 
 
-void MoveEntityMessage::process(const sockaddr_in& senderAddr)
+void MoveEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 
 }

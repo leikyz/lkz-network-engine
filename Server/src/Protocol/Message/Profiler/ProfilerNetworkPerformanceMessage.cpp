@@ -23,7 +23,7 @@ void ProfilerNetworkPerformanceMessage::deserialize(Deserializer& deserializer)
 {
 }
 
-void ProfilerNetworkPerformanceMessage::process(const sockaddr_in& senderAddr)
+void ProfilerNetworkPerformanceMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
 
 }

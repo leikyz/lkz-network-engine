@@ -19,7 +19,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
 
-enum class IO_OPERATION { RECEIVE_UDP, SEND_UDP, ACCEPT_TCP, RECEIVE_TCP };
+enum class IO_OPERATION { RECEIVE_UDP, SEND_UDP, ACCEPT_TCP, RECEIVE_TCP, SEND_TCP };
 
 // Base struct for I/O operations
 struct BaseIo {
@@ -73,14 +73,23 @@ struct ReceiveTCPIoData : public BaseIo {
         opType = IO_OPERATION::RECEIVE_TCP;
         wsabuf.buf = (CHAR*)buffer;
         wsabuf.len = sizeof(buffer);
-    }
-
-    
+    }  
 };
+
+struct SendTCPIoData : public BaseIo {
+    SOCKET socket;
+    WSABUF wsabuf;
+    std::vector<uint8_t> data;
+
+    SendTCPIoData(size_t bufferSize) : data(bufferSize) {
+        opType = IO_OPERATION::SEND_TCP; // Ajoute cet enum si pas déjà fait
+        ResetOverlapped();
+    }
+};
+
 struct AcceptIoData : public BaseIo {
     SOCKET listenSocket;
     SOCKET acceptSocket;
-    // Buffer requis par AcceptEx pour stocker les adresses locales et distantes
     uint8_t addressBuffer[(sizeof(sockaddr_in) + 16) * 2];
 
     AcceptIoData(SOCKET lSocket) : listenSocket(lSocket), acceptSocket(INVALID_SOCKET) {
@@ -95,6 +104,7 @@ public:
     ~WindowsServer() override;
 
     void Start() override;
+    void SendReliable(SOCKET clientSocket, std::span<const uint8_t> buffer) override;
     void Send(const sockaddr_in& clientAddr, std::span<const uint8_t> data, const char* messageName) override;
     void SendToMultiple(std::span<const sockaddr_in> addresses, std::span<const uint8_t> data, const char* messageName, const sockaddr_in* excludedAddr = nullptr) override; 
     void Poll() override;
@@ -119,6 +129,10 @@ private:
 
     std::vector<std::unique_ptr<SendUDPIoData>> sendUDPPool;
     std::queue<SendUDPIoData*> availableSends;
+
+    std::vector<std::unique_ptr<SendTCPIoData>> sendTCPPool;
+    std::queue<SendTCPIoData*> availableTCPSends;
+
     std::mutex sendPoolMutex;
 
     bool running = false;

@@ -13,10 +13,10 @@ class EventManager
 {
 public:
 	// Type definition for message handler functions
-    using MessageHandler = void(*)(std::span<const uint8_t>, const sockaddr_in&);
+    using MessageHandler = void(*)(std::span<const uint8_t>, const sockaddr_in&, SOCKET);
 
     static void BindEvents();
-    static void processMessage(std::span<const uint8_t>, const sockaddr_in& senderAddr, bool isReliable = false);
+    static void processMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr, bool isReliable, SOCKET tcpSocket);
 
 private:
 	// Array of message handlers indexed by message ID (0-255) can handle up to 256 different message types
@@ -24,7 +24,7 @@ private:
 
     template<typename T>
 	// Generic message handler to process messages of type T
-    static void handleMessage(std::span<const uint8_t>, const sockaddr_in&);
+    static void handleMessage(std::span<const uint8_t>, const sockaddr_in&, SOCKET tcpSocket);
 
     template<typename T>
 	// Registers a message handler for a specific message ID

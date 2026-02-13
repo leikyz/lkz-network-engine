@@ -45,7 +45,7 @@ void PlayerInputMessage::deserialize(Deserializer& deserializer)
     sequenceId = deserializer.readInt();
 }
 
-void PlayerInputMessage::process(const sockaddr_in& senderAddr)
+void PlayerInputMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
     //auto* client = ClientManager::getClientByAddress(senderAddr);
     //if (!client) return;
