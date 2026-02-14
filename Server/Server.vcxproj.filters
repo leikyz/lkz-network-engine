@@ -309,6 +309,9 @@
     <ClCompile Include="src\Protocol\Message\Session\JoinSessionMessage.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\Protocol\Message\Approach\HandshakeUDPMessage.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Protocol\Message\Message.h">
@@ -636,6 +639,9 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\LKZ\Protocol\Message\Session\JoinSessionMessage.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LKZ\Protocol\Message\Approach\HandshakeUDPMessage.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

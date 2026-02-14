@@ -47,48 +47,48 @@ void PlayerInputMessage::deserialize(Deserializer& deserializer)
 
 void PlayerInputMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
-    //auto* client = ClientManager::getClientByAddress(senderAddr);
-    //if (!client) return;
+    Session* session = SessionManager::GetSessionByAddress(senderAddr);
+    if (!session) return;
 
-    //Session* session = SessionManager::GetSession(client->lobbyId);
-    //if (!session) return;
+    uint32_t targetEntityId = this->entityId;
+    float currentYaw = this->yaw;
 
-    //// Capture data locally to pass into the lambda
-    //Entity entity = entityId;
-    //float currentYaw = yaw;
+    PlayerInputData packet;
+    packet.inputX = this->inputX;
+    packet.inputY = this->inputY;
+    packet.yaw = this->yaw;
+    packet.isAiming = this->isAiming;
+    packet.isRunning = this->isSprinting;
+    packet.isArmed = this->isArmed;
+    packet.sequenceId = this->sequenceId;
 
-    //PlayerInputData packet;
-    //packet.inputX = inputX;
-    //packet.inputY = inputY;
-    //packet.yaw = yaw;
-    //packet.isAiming = isAiming;
-    //packet.isRunning = isSprinting;
-    //packet.isArmed = isArmed;
-    //packet.sequenceId = sequenceId;
+    CommandQueue::Instance().Push([targetEntityId, packet, currentYaw]()
+        {
+            auto& components = ComponentManager::Instance();
 
-    //CommandQueue::Instance().Push([entity, packet, currentYaw]()
-    //    {
-    //        auto& components = ComponentManager::Instance();
+            if (components.playerInputs.find(targetEntityId) != components.playerInputs.end())
+            {
+                components.playerInputs[targetEntityId].inputQueue.push_back(packet);
+            }
 
-    //        // Check if entity still exists (it might have disconnected by the time this runs)
-    //        if (components.playerInputs.find(entity) != components.playerInputs.end())
-    //        {
-    //            // Safe to push_back now because we are on the main thread
-    //            components.playerInputs[entity].inputQueue.push_back(packet);
-    //        }
+            if (components.rotations.find(targetEntityId) != components.rotations.end())
+            {
+                components.rotations[targetEntityId].rotation.y = currentYaw;
+            }
+        });
 
-    //        if (components.rotations.find(entity) != components.rotations.end())
-    //        {
-    //            components.rotations[entity].rotation.y = currentYaw;
-    //        }
-    //    });
+    Serializer serializer;
+    serialize(serializer); 
 
-    //Serializer serializer;
-    //serialize(serializer);
+    const std::vector<uint8_t>& buffer = serializer.getBuffer();
+    const std::string& className = getClassName();
 
-    //Engine::Instance().Server()->SendToMultiple(
-    //    session->clientsAddress,
-    //    serializer.getBuffer(),
-    //    getClassName(),
-    //    &senderAddr);
+    for (const auto& player : session->players)
+    {
+        if (player.isUdpReady && player.entityId != entityId)
+        {
+
+            Engine::Instance().Server()->Send(player.udpAddr, buffer, getClassName());
+        }
+    }
 }

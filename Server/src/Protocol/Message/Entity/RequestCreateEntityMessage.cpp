@@ -13,8 +13,6 @@
 #include "LKZ/Utility/Logger.h"
 #include "LKZ/Utility/Constants.h"
 #include <DetourCrowd.h>
-
-// Include for Vector3
 #include "LKZ/Simulation/Math/Vector.h" 
 #include <iostream>
 
@@ -43,209 +41,174 @@ void RequestCreateEntityMessage::deserialize(Deserializer& deserializer)
 
 void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
-   // Client* client = ClientManager::getClientByAddress(senderAddr);
-   // if (!client)
-   // {
-   //     Logger::Log("RequestCreateEntityMessage: Client introuvable.", LogType::Warning);
-   //     return;
-   // }
+    Session* session = (tcpSocket != INVALID_SOCKET)
+        ? SessionManager::GetSessionBySocket(tcpSocket)
+        : SessionManager::GetSessionByAddress(senderAddr);
 
-   // Lobby* lobby = LobbyManager::getLobby(client->lobbyId);
-   // if (!lobby)
-   // {
-   //     Logger::Log("RequestCreateEntityMessage: Lobby introuvable.", LogType::Warning);
-   //     return;
-   // }
+    if (!session)
+    {
+        Logger::Log("RequestCreateEntityMessage: Session introuvable.", LogType::Warning);
+        return;
+    }
 
-   // int superTypeId = this->entitySuperTypeId;
-   // INetworkInterface* server = Engine::Instance().Server();
+    SessionPlayer* player = nullptr;
+    if (tcpSocket != INVALID_SOCKET)
+    {
+        for (auto& p : session->players)
+        {
+            if (p.tcpSocket == tcpSocket)
+            {
+                player = &p;
+                break;
+            }
+        }
+    }
 
-   // // --- SPAWN PLAYER ---
-   // if (superTypeId == (int)EntitySuperType::Player)
-   // {
-   //     CommandQueue::Instance().Push([=]() {
-   //         auto& components = ComponentManager::Instance();
-   //         Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(superTypeId), components, lobby);
+    int superTypeId = this->entitySuperTypeId;
+    INetworkInterface* server = Engine::Instance().Server();
 
-   //         Logger::Log("Creating Player entity " + std::to_string(entity) +
-   //             " for client " + client->ipAddress, LogType::Info);
+    // --- SPAWN PLAYER ---
+    if (superTypeId == (int)EntitySuperType::Player)
+    {
+        CommandQueue::Instance().Push([=]() {
+            auto& components = ComponentManager::Instance();
+            Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(superTypeId), components, session);
 
-   //         client->playerEntityId = entity;
+            if (player)
+            {
+                player->entityId = entity;
+            }
 
-   //         //// Calculate spawn position
-   //         //float spawnX = 10.0f + rand() % 5;
-   //         //float spawnY = 0.0f;
-   //         //float spawnZ = 10.0f + rand() % 5;
+            Vector3 playerSpawnPos = Constants::FIRST_PLAYER_SPAWN_POSITION;
 
-   //         World& world = Engine::Instance().GetWorld();
-   //         /*dtNavMeshQuery* simQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());*/
+            int positionIndex = 1;
+            for (size_t i = 0; i < session->players.size(); ++i)
+            {
 
-			//Vector3 playerSpawnPos = Constants::FIRST_PLAYER_SPAWN_POSITION;
+                if (session->players[i].id == player->id)
+                {
 
-   //         switch (client->positionInLobby)
-   //         {
-   //             case 1:
-			//		playerSpawnPos = Constants::FIRST_PLAYER_SPAWN_POSITION;
-			//	    break;
-			//	case 2:
-			//		playerSpawnPos = Constants::SECOND_PLAYER_SPAWN_POSITION;
-   //                 break;
-			//	case 3:
-   //                 playerSpawnPos = Constants::THIRD_PLAYER_SPAWN_POSITION;
-			//		break;
-			//	case 4:
-   //                 playerSpawnPos = Constants::FOURTH_PLAYER_SPAWN_POSITION;
-			//		break;
-   //         default:
-   //             break;
-   //         }
+                    positionIndex = (int)i + 1;
+                    break;
+                }
+            }
 
-			//std::cout << "Position in lobby: " << client->positionInLobby << std::endl;
+            switch (positionIndex)
+            {
+            case 1: playerSpawnPos = Constants::FIRST_PLAYER_SPAWN_POSITION; break;
+            case 2: playerSpawnPos = Constants::SECOND_PLAYER_SPAWN_POSITION; break;
+            case 3: playerSpawnPos = Constants::THIRD_PLAYER_SPAWN_POSITION; break;
+            case 4: playerSpawnPos = Constants::FOURTH_PLAYER_SPAWN_POSITION; break;
+            }
 
-   //         components.AddComponent(entity, PositionComponent{ playerSpawnPos });
-   //         components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
+            components.AddComponent(entity, PositionComponent{ playerSpawnPos });
+            components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
+            components.AddComponent(entity, PlayerInputComponent{ std::vector<PlayerInputData>() });
 
-   //         components.AddComponent(entity, PlayerInputComponent{ std::vector<PlayerInputData>() });
+            // Message pour le client local (Propriétaire)
+            CreateEntityMessage createEntityMsg;
+            createEntityMsg.entityTypeId = (int)EntityType::Player1;
+            createEntityMsg.entityId = entity;
+            createEntityMsg.posX = playerSpawnPos.x;
+            createEntityMsg.posY = playerSpawnPos.y;
+            createEntityMsg.posZ = playerSpawnPos.z;
 
-   //         CreateEntityMessage createEntityMsg;
-   //         createEntityMsg.entityTypeId = (int)EntityType::Player1;
-   //         createEntityMsg.entityId = entity;
-   //         createEntityMsg.posX = playerSpawnPos.x;
-   //         createEntityMsg.posY = playerSpawnPos.y;
-   //         createEntityMsg.posZ = playerSpawnPos.z;
+            Serializer serializer;
+            createEntityMsg.serialize(serializer);
 
-   //        /* lobby->addEntity(&entity);*/
+            server->SendReliable(tcpSocket, serializer.getBuffer());
 
-   //         Serializer serializer;
-   //         createEntityMsg.serialize(serializer);
+            createEntityMsg.entityTypeId = (int)EntityType::PlayerSynced1;
+            createEntityMsg.serialize(serializer);
 
-   //         server->Send(senderAddr, serializer.getBuffer(), createEntityMsg.getClassName());
+            const std::vector<uint8_t>& buffer = serializer.getBuffer();
 
-   //         createEntityMsg.entityTypeId = (int)EntityType::PlayerSynced1;
-   //         createEntityMsg.serialize(serializer);
+            for (const auto& p : session->players)
+            {
+                if (!player)
+                    continue;
 
-   //         server->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id),
-   //             serializer.getBuffer(),
-   //             createEntityMsg.getClassName(),
-   //             client);
-   //         });
-   // }
-   // else // Zombie (or other AI)
-   // {
-   //     // AI spawning is SLOW. Push to a worker thread first to find a valid point.
-   //     ThreadManager::GetPool("pathfinding")->EnqueueTask([=]() {
+                if (p.id != player->id && p.tcpSocket != INVALID_SOCKET)
+                {
+                   
 
-   //         World& world = Engine::Instance().GetWorld();
-   //         dtNavMeshQuery* simQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
+                    server->SendReliable(p.tcpSocket, buffer);
+                }
+            }
+            });
+    }
+    else
+    {
+        ThreadManager::GetPool("pathfinding")->EnqueueTask([=]() {
+            auto& world = Engine::Instance().GetWorld();
+            dtNavMeshQuery* simQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
+            Vector3 randomSpawnPoint = world.getRandomNavMeshPoint(simQuery);
 
-   //         int randomChoice = (rand() % 4) + 1; 
+            CommandQueue::Instance().Push([=]() {
+                auto& components = ComponentManager::Instance();
+                auto& world = Engine::Instance().GetWorld();
+                Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(superTypeId), components, session);
 
-   //         /*Vector3 randomSpawnPoint;
+                components.AddComponent(entity, PositionComponent{ randomSpawnPoint });
+                components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
 
-   //         if (randomChoice == 1) {
-   //             randomSpawnPoint = Constants::FIRST_ZOMBIE_SPAWN_POSITION;
-   //         }
-   //         else if (randomChoice == 2) {
-   //             randomSpawnPoint = Constants::SECOND_ZOMBIE_SPAWN_POSITION;
-   //         }
-   //         else if (randomChoice == 3) {
-   //             randomSpawnPoint = Constants::THIRD_ZOMBIE_SPAWN_POSITION;
-   //         }
-   //         else {
-   //             randomSpawnPoint = Constants::FOURTH_ZOMBIE_SPAWN_POSITION;
-   //         }*/
-   //         Vector3 randomSpawnPoint = world.getRandomNavMeshPoint(simQuery);
-			///*Vector3 randomSpawnPoint = Constants::FIRST_PLAYER_SPAWN_POSITION;*/
-   //         CommandQueue::Instance().Push([=]() {
+                float initialRepathDelay = ((rand() % 100) / 100.0f) * 2.0f;
+                Vector3 initialTarget = world.getRandomNavMeshPoint(simQuery);
+                if (initialTarget.x == 0 && initialTarget.z == 0) initialTarget = { 10.0f, 0.0f, 10.0f };
 
-   //             auto& components = ComponentManager::Instance();
-   //             auto& world = Engine::Instance().GetWorld();
-   //             Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(superTypeId), components, lobby);
+                components.AddComponent(entity, AIComponent{
+                    initialTarget,
+                    initialRepathDelay,
+                    -1,
+                    0.0f,
+                    });
 
-   //             Logger::Log("Creating entity of type " + std::to_string(superTypeId) + " with ID " + std::to_string(entity), LogType::Info);
+                auto& aiComp = components.ai[entity];
+                aiComp.posPtr = &components.positions[entity];
+                aiComp.rotPtr = &components.rotations[entity];
 
-   //             // Initialize Position & Rotation
-   //             components.AddComponent(entity, PositionComponent{ Vector3{ randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z } });
-   //             components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
+                dtCrowd* crowd = world.getCrowd();
+                if (crowd)
+                {
+                    dtCrowdAgentParams params;
+                    memset(&params, 0, sizeof(params));
+                    params.radius = Constants::AGENT_RADIUS;
+                    params.height = Constants::AGENT_HEIGHT;
+                    params.maxAcceleration = Constants::AGENT_MAX_ACCELERATION;
+                    params.maxSpeed = Constants::AGENT_MAX_SPEED;
+                    params.collisionQueryRange = params.radius * 8.0f;
+                    params.pathOptimizationRange = params.radius * 30.0f;
+                    params.queryFilterType = Constants::AGENT_QUERY_FILTER_TYPE;
+                    params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
+                    params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
+                    params.updateFlags = Constants::AGENT_UPDATE_FLAGS & ~DT_CROWD_OBSTACLE_AVOIDANCE;
+                    params.userData = &aiComp;
 
-   //             Logger::Log("Spawned AI entity " + std::to_string(entity) +
-   //                 " at (" + std::to_string(randomSpawnPoint.x) + ", " +
-   //                 std::to_string(randomSpawnPoint.y) + ", " +
-   //                 std::to_string(randomSpawnPoint.z) + ")", LogType::Info);
+                    float spawnPos[3] = { randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z };
+                    int agentIdx = crowd->addAgent(spawnPos, &params);
+                    if (agentIdx != -1) components.ai[entity].crowdAgentIndex = agentIdx;
+                }
 
+                CreateEntityMessage createEntityMsg;
+                createEntityMsg.entityTypeId = 3 + rand() % 3;
+                createEntityMsg.entityId = entity;
+                createEntityMsg.posX = randomSpawnPoint.x;
+                createEntityMsg.posY = randomSpawnPoint.y;
+                createEntityMsg.posZ = randomSpawnPoint.z;
 
+                Serializer serializer;
+                createEntityMsg.serialize(serializer);
 
-   //             float initialRepathDelay = ((rand() % 100) / 100.0f) * 2.0f;
+                const std::vector<uint8_t>& buffer = serializer.getBuffer();
 
-   //             Vector3 initialTarget = world.getRandomNavMeshPoint(simQuery);
-   //             if (initialTarget.x == 0 && initialTarget.z == 0) initialTarget = { 10.0f, 0.0f, 10.0f };
-
-   //             components.AddComponent(entity, AIComponent{
-   //                 initialTarget,     
-   //                 initialRepathDelay,
-   //                 -1,
-   //                 0.0f,
-   //                 });
-
-   //             auto& aiComp = components.ai[entity];
-   //             aiComp.posPtr = &components.positions[entity];
-   //             aiComp.rotPtr = &components.rotations[entity];
-
-   //             dtCrowd* crowd = world.getCrowd();
-   //             if (crowd)
-   //             {
-   //                 dtCrowdAgentParams params;
-   //                 memset(&params, 0, sizeof(params));
-
-   //               
-
-   //                 params.radius = Constants::AGENT_RADIUS;
-   //                 params.height = Constants::AGENT_HEIGHT;
-   //                 params.maxAcceleration = Constants::AGENT_MAX_ACCELERATION;
-   //                 params.maxSpeed = Constants::AGENT_MAX_SPEED;
-
-   //                 params.collisionQueryRange = params.radius * 8.0f;
-   //                 params.pathOptimizationRange = params.radius * 30.0f;
-
-   //                 params.queryFilterType = Constants::AGENT_QUERY_FILTER_TYPE;
-   //                 params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
-   //                 params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
-   //                 params.updateFlags = Constants::AGENT_UPDATE_FLAGS & ~DT_CROWD_OBSTACLE_AVOIDANCE;
-   //                 //params.updateFlags = DT_CROWD_ANTICIPATE_TURNS | DT_CROWD_OPTIMIZE_TOPO | DT_CROWD_OPTIMIZE_VIS; // disable
-
-   //                 params.userData = &aiComp;
-
-   //                 float spawnPos[3] = { randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z };
-   //                 int agentIdx = crowd->addAgent(spawnPos, &params);
-
-   //                 if (agentIdx != -1)
-   //                 {
-   //                     components.ai[entity].crowdAgentIndex = agentIdx;
-   //                 }
-   //                 else
-   //                 {
-   //                     Logger::Log("Failed to add agent to crowd (Max agents reached?)", LogType::Error);
-   //                 }
-   //             }
-
-   //             CreateEntityMessage createEntityMsg;
-   //             createEntityMsg.entityTypeId = 3 + rand() % 3;
-   //             createEntityMsg.entityId = entity;
-   //             createEntityMsg.posX = randomSpawnPoint.x;
-   //             createEntityMsg.posY = randomSpawnPoint.y;
-   //             createEntityMsg.posZ = randomSpawnPoint.z;
-
-   //             /*lobby->addEntity(&entity);*/
-
-   //             Serializer serializer;
-   //             createEntityMsg.serialize(serializer);
-
-   //             server->SendToMultiple(
-   //                 LobbyManager::getClientsInLobby(lobby->id),
-   //                 serializer.getBuffer(),
-   //                 createEntityMsg.getClassName()
-   //             );
-   //             });
-   //         });
-   // }
+                for (const auto& p : session->players)
+                {
+                    if (p.tcpSocket != INVALID_SOCKET)
+                    {
+                        server->SendReliable(p.tcpSocket, buffer);
+                    }
+                }
+                });
+            });
+    }
 }

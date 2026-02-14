@@ -424,8 +424,8 @@ void WindowsServer::Poll()
         // Success and bytesTransferred > 0 means we actually received data
         if (success && bytesTransferred > 0)
             EventManager::processMessage(ioData->buffer, ioData->clientAddr, false, INVALID_SOCKET);
-        pendingReceives--;
-        std::cout << "Buffers currently held by Windows: " << pendingReceives.load() << std::endl;
+    /*    pendingReceives--;
+        std::cout << "Buffers currently held by Windows: " << pendingReceives.load() << std::endl;*/
 
          Sleep(1);
         // Recycle the buffer: Immediately repost the receive request to the Windows Kernel

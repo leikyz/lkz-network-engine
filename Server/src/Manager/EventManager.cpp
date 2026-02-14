@@ -3,6 +3,7 @@
 #include "LKZ/Utility/Logger.h"
 #include "LKZ/Core/Manager/EventManager.h"
 #include "LKZ/Protocol/Message/Approach/CreateClientMessage.h"
+#include "LKZ/Protocol/Message/Approach/HandshakeUDPMessage.h"
 #include "LKZ/Protocol/Message/Approach/ServerInformationsMessage.h"
 #include "LKZ/Protocol/Message/Approach/DisconnectClientMessage.h"
 #include "LKZ/Protocol/Message/Entity/CreateEntityMessage.h"
@@ -63,6 +64,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<ProfilerClientCreatedMessage>(24);
     EventManager::registerHandler<CreateSessionMessage>(26);
     EventManager::registerHandler<JoinSessionMessage>(28);
+    EventManager::registerHandler<HandshakeUDPMessage>(30);
 }
 
 template<typename T>

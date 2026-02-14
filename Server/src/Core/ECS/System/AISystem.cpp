@@ -182,17 +182,24 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                     msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
 
 					// Send in batches of 100 updates to avoid large packets
-                    if (msg.updates.size() >= 100) {
+                    if (msg.updates.size() >= 100)
+                    {
                         Serializer s;
                         msg.serialize(s);
+                        const std::vector<uint8_t>& buffer = s.getBuffer();
+                        const std::string& className = msg.getClassName();
 
-                        Engine::Instance().Server()->SendToMultiple(
-                            session->connectedAddresses,
-                            s.getBuffer(),
-                            msg.getClassName()
-                        );
+       
+                        for (const auto& player : session->players)
+                        {
+                            if (player.isUdpReady)
+                            {
+                                Engine::Instance().Server()->Send(player.udpAddr, buffer, msg.getClassName());
+                            }
+                        }
 
-                        msg.updates.clear(); 
+                        // 4. On vide les mises à jour pour recommencer à accumuler
+                        msg.updates.clear();
                     }
                 }
             }
@@ -204,10 +211,23 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
     {
         if (!msg.updates.empty())
         {
+            // 1. OPTIMISATION : On sérialise UNE SEULE FOIS pour tout le monde
             Serializer s;
             msg.serialize(s);
-           /* Engine::Instance().GetProfiler()->Broadcast(s.getBuffer());*/
-            Engine::Instance().Server()->SendToMultiple(session->connectedAddresses, s.getBuffer(), msg.getClassName());
+
+            // On récupère le buffer (évite de copier le vector à chaque appel)
+            const std::vector<uint8_t>& buffer = s.getBuffer();
+
+            // 2. On parcourt les joueurs de la session
+            for (const auto& player : session->players)
+            {
+                // 3. SÉCURITÉ : On n'envoie qu'à ceux qui ont fait le Handshake UDP
+                if (player.isUdpReady)
+                {
+                    // Envoi direct (Coût faible, c'est juste un appel système sendto)
+                    Engine::Instance().Server()->Send(player.udpAddr, buffer, msg.getClassName());
+                }
+            }
         }
     }
 }

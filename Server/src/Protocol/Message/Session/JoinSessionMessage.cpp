@@ -25,6 +25,14 @@ void JoinSessionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket
 {
 	Session* session = SessionManager::GetSession(sessionToken);
 
+    char ipStr[INET_ADDRSTRLEN];
+    // Convertit l'IP binaire en string (ex: "192.168.1.50")
+    inet_ntop(AF_INET, &(senderAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
+    // Convertit le port réseau en entier (ntohs = Network To Host Short)
+    int port = ntohs(senderAddr.sin_port);
+
+    std::cout << "[JoinSessionMessage] Processing request from: " << ipStr << ":" << port << std::endl;
+
 	if (!session) {
         std::cerr << "[JoinSessionMessage] Session not found for token: " << sessionToken << std::endl;
         return;
@@ -45,17 +53,17 @@ void JoinSessionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket
 
     }
 
-    if(session->connectedIds.size() == session->authorizedClientIds.size())
+    if(session->players.size() == session->authorizedClientIds.size())
     {
         std::cout << "[JoinSessionMessage] All clients joined session " << std::endl;
 
-		for (const auto& socket : session->connectedTCPSocket)
+		for (const auto& player : session->players)
         {
-			std::cout << "[JoinSessionMessage] Sending StartGameMessage to socket: " << socket << std::endl;
+			std::cout << "[JoinSessionMessage] Sending StartGameMessage to socket: " << player.tcpSocket << std::endl;
 			StartGameMessage startGameMsg;
             Serializer s;
             startGameMsg.serialize(s);
-            Engine::Instance().Server()->SendReliable(socket, s.getBuffer());
+            Engine::Instance().Server()->SendReliable(player.tcpSocket, s.getBuffer());
         }
 	}
 }

@@ -19,6 +19,7 @@ std::vector<uint8_t>& CreateEntityMessage::serialize(Serializer& serializer) con
 {
     serializer.reset();
 
+    serializer.writeUInt16(21);
     serializer.writeByte(ID);
     serializer.writeUInt16(entityId);
     serializer.writeInt(entityTypeId);
