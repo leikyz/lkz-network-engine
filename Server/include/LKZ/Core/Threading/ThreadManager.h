@@ -14,10 +14,8 @@ public:
     static PoolPtr GetPool(const std::string& name);
     static void StopAll();
     static void SetGlobalDeltaTime(float dt);
-    static float GetGlobalDeltaTime();
 
 private:
     static inline std::unordered_map<std::string, PoolPtr> pools;
     static inline std::mutex managerMutex;
-    static inline float globalDeltaTime = 0.0f;
 };

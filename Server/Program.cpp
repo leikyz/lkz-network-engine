@@ -43,9 +43,18 @@ int main()
     systemManager.RegisterSystem(std::make_shared<WaveSystem>());
     systemManager.RegisterSystem(std::make_shared<AISystem>());
 
-    ThreadManager::CreatePool("io", 1, [server](float) { server->Poll(); }, false);
+    ThreadManager::CreatePool("io", 1);
+
+    ThreadManager::GetPool("io")->EnqueueTask([server]()
+        {
+            while (true)
+            {
+                server->Poll();
+            }
+        });
     ThreadManager::CreatePool("profiler", 1, [&](float) { engine.GetProfiler()->Poll(); }, true);
-    ThreadManager::CreatePool("pathfinding", 2);
+    ThreadManager::CreatePool("pathfinding", 4);
+
     ThreadManager::CreatePool("simulation", 1, [&](float)
         {
             auto& engine = Engine::Instance();

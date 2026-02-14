@@ -68,11 +68,13 @@ struct ReceiveTCPIoData : public BaseIo {
     uint8_t buffer[8192];
     WSABUF wsabuf;
     sockaddr_in clientAddr;
+    std::vector<uint8_t> pendingData;
 
     ReceiveTCPIoData(SOCKET s, const sockaddr_in& addr) : socket(s) {
         opType = IO_OPERATION::RECEIVE_TCP;
         wsabuf.buf = (CHAR*)buffer;
         wsabuf.len = sizeof(buffer);
+        pendingData.reserve(4096);
     }  
 };
 

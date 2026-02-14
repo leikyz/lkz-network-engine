@@ -43,35 +43,28 @@ void Engine::Initialize()
 
 void Engine::Run()
 {
-    const float targetFrameTime = 1.0f / 60.0f;
-    float accumulator = 0.0f;
+    // Plus besoin de targetFrameTime ou accumulator pour la physique
+    // float accumulator = 0.0f; <-- POUBELLE
 
+    // Variables pour le Profiler (FPS du Main Thread uniquement)
     float profilerTimer = 0.0f;
     int framesCounted = 0;
     float accumulatedDeltaTime = 0.0f;
 
     lastFrame = std::chrono::steady_clock::now();
 
-    while (true)
+	isRunning = true;
+
+    while (isRunning) 
     {
         auto now = std::chrono::steady_clock::now();
+
         deltaTime = std::chrono::duration<float>(now - lastFrame).count();
         lastFrame = now;
-
-        accumulator += deltaTime;
 
         profilerTimer += deltaTime;
         accumulatedDeltaTime += deltaTime;
         framesCounted++;
-
-        ThreadManager::SetGlobalDeltaTime(deltaTime);
-
-        while (accumulator >= Constants::FIXED_DELTA_TIME)
-        {
-            ThreadManager::SetGlobalDeltaTime(Constants::FIXED_DELTA_TIME);
-            accumulator -= Constants::FIXED_DELTA_TIME;
-
-        }
 
         if (profiler && profilerTimer >= 0.1f)
         {
@@ -80,10 +73,8 @@ void Engine::Run()
 
             ProfilerNetworkPerformanceMessage msg;
             Serializer s;
-
             msg.deltaTime = avgDeltaTime;
             msg.fps = avgFps;
-
             msg.serialize(s);
             profiler->Broadcast(s.getBuffer());
 
@@ -92,12 +83,9 @@ void Engine::Run()
             accumulatedDeltaTime = 0.0f;
         }
 
-        network->Poll();
-
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
-
 INetworkInterface* Engine::Server()
 {
     return network;

@@ -20,6 +20,7 @@ public:
 
     float GetDeltaTime() const { return deltaTime; }
     World& GetWorld() const { return *world; }
+	bool IsRunning() const { return isRunning; }
     void SetWorld(World* newWorld) { world = newWorld; }
 
     static INetworkInterface* Server();
@@ -36,7 +37,7 @@ private:
 
     // Pointeur intelligent vers le profiler
     std::unique_ptr<ProfilerServer> profiler;
-
+    bool isRunning;
     World* world;
     std::chrono::steady_clock::time_point lastFrame;
     float deltaTime = 0.0f;

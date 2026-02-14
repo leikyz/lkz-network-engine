@@ -54,6 +54,21 @@ void UpdateVelocity(Vector3& velocity, const PlayerInputData& input, float speed
 
 void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 {
+    static int tickCount = 0;
+    static auto lastTickTime = std::chrono::high_resolution_clock::now();
+
+    tickCount++;
+    auto currentTime = std::chrono::high_resolution_clock::now();
+
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTickTime).count() >= 1000)
+    {
+        Logger::Log("[SERVER TICK] Simulation Frequency: " + std::to_string(tickCount) + " Hz", LogType::Info);
+
+        // Reset
+        tickCount = 0;
+        lastTickTime = currentTime;
+    }
+
     World& world = Engine::Instance().GetWorld();
     dtNavMeshQuery* navQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
     const dtQueryFilter* filter = world.getCrowd() ? world.getCrowd()->getFilter(0) : nullptr;
@@ -73,6 +88,10 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
                 ownerPlayer = &player;
                 break;
             }
+        }
+        
+        if (inputComp.inputQueue.size() > 1) {
+            Logger::Log("Accumulation détectée : " + std::to_string(inputComp.inputQueue.size()) + " inputs", LogType::Warning);
         }
 
         if (!ownerPlayer || !ownerPlayer->isUdpReady) continue;
@@ -166,10 +185,10 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
         inputComp.inputQueue.clear();
 
-        Logger::Log("[PlayerSystem] Entity: " + std::to_string(entity) +
+       /* Logger::Log("[PlayerSystem] Entity: " + std::to_string(entity) +
             " | Pos: (" + std::to_string(pos.x) + ", " +
             std::to_string(pos.y) + ", " +
-            std::to_string(pos.z) + ")", LogType::Info);
+            std::to_string(pos.z) + ")", LogType::Info);*/
 
         if (hasProcessed)
         {

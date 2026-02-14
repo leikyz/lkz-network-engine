@@ -1,7 +1,7 @@
 ﻿#include "LKZ/Core/Server/WindowsServer.h"
 #include <iostream>
 #include <LKZ/Core/Manager/EventManager.h>
-
+#include <iomanip>
 
 WindowsServer::WindowsServer(int port)
     : port(port) {}
@@ -185,16 +185,21 @@ void WindowsServer::Send(const sockaddr_in& clientAddr, std::span<const uint8_t>
     // Borrow a pre-allocated buffer from the pool.
     // We use a mutex to ensure that multiple threads don't grab the same buffer.
     SendUDPIoData* io = nullptr;
+    size_t poolSize = 0; 
+
     {
         std::lock_guard<std::mutex> lock(sendPoolMutex);
+        poolSize = availableSends.size(); 
         if (!availableSends.empty()) {
             io = availableSends.front();
             availableSends.pop();
         }
     }
 
-    // If the pool is empty, it means all buffers are currently busy in the Windows kernel.
-    // We drop the message to avoid blocking the server or leaking memory.
+    if (poolSize < 5) {
+        std::cerr << "[WARNING] Send Pool Critical! Remaining: " << poolSize << " (Possible saturation)\n";
+    }
+
     if (!io) {
         std::cerr << "[Network] Send Pool empty! Message dropped: " << messageName << "\n";
         return;
@@ -420,16 +425,16 @@ void WindowsServer::Poll()
     {
         ReceiveUDPIoData* ioData = static_cast<ReceiveUDPIoData*>(base);
 
-  /*      std::cout << "[UDP] Received " << bytesTransferred << std::endl;*/
-        // Success and bytesTransferred > 0 means we actually received data
+        /*      std::cout << "[UDP] Received " << bytesTransferred << std::endl;*/
+              // Success and bytesTransferred > 0 means we actually received data
         if (success && bytesTransferred > 0)
             EventManager::processMessage(ioData->buffer, ioData->clientAddr, false, INVALID_SOCKET);
-    /*    pendingReceives--;
-        std::cout << "Buffers currently held by Windows: " << pendingReceives.load() << std::endl;*/
+        /*    pendingReceives--;
+            std::cout << "Buffers currently held by Windows: " << pendingReceives.load() << std::endl;*/
 
-         Sleep(1);
-        // Recycle the buffer: Immediately repost the receive request to the Windows Kernel
-        // so we don't miss the next incoming UDP packet
+            /*Sleep(1);*/
+           // Recycle the buffer: Immediately repost the receive request to the Windows Kernel
+           // so we don't miss the next incoming UDP packet
         PostReceive(ioData);
         break;
     }
@@ -485,22 +490,83 @@ void WindowsServer::Poll()
         delete acceptData;
         break;
     }
-    
     case IO_OPERATION::RECEIVE_TCP:
     {
         ReceiveTCPIoData* ioData = static_cast<ReceiveTCPIoData*>(base);
 
-        if (success && bytesTransferred > 0) {
-            EventManager::processMessage(ioData->buffer, ioData->clientAddr, true, ioData->socket);
+        // Handle successful data reception
+        if (success && bytesTransferred > 0)
+        {
+            // Append newly received raw bytes to the persistent pending buffer
+            size_t oldSize = ioData->pendingData.size();
+            ioData->pendingData.resize(oldSize + bytesTransferred);
+            memcpy(ioData->pendingData.data() + oldSize, ioData->buffer, bytesTransferred);
 
-            // Re-prime the TCP receive: wait for more data on the same socket
+            size_t readPos = 0;
+            size_t totalSize = ioData->pendingData.size();
+
+            // Process the stream as long as there are complete messages in the buffer
+            while (true)
+            {
+                // Check if we have enough data to read the 2-byte size header
+                if (totalSize - readPos < 2)
+                {
+                    break;
+                }
+
+                // Extract message size using Big Endian reconstruction (Network Byte Order)
+                unsigned short msgSize = (ioData->pendingData[readPos] << 8) | ioData->pendingData[readPos + 1];
+
+                // Critical safety check: Avoid infinite loops or memory corruption if size is zero
+                if (msgSize == 0) {
+                    ioData->pendingData.clear();
+                    break;
+                }
+
+                // Check if the full message body has arrived in the stream
+                if (totalSize - readPos < msgSize)
+                {
+                    break;
+                }
+
+                // Extract the full packet (header + payload) into a temporary container
+                // Your EventManager expects the full data span starting with the size header
+                std::vector<uint8_t> packet(
+                    ioData->pendingData.begin() + readPos,
+                    ioData->pendingData.begin() + readPos + msgSize
+                );
+
+                // Dispatch the reliable message for logic processing
+                EventManager::processMessage(packet, ioData->clientAddr, true, ioData->socket);
+
+                // Advance the cursor past the processed message
+                readPos += msgSize;
+            }
+
+            // Cleanup the pending buffer
+            if (readPos == totalSize)
+            {
+                // Efficiency: Everything was processed, clear the vector without reallocating
+                ioData->pendingData.clear();
+            }
+            else if (readPos > 0)
+            {
+                // Fragmentation: Shift unprocessed bytes (partial messages) to the front for the next IO cycle
+                std::vector<uint8_t> leftover;
+                leftover.assign(ioData->pendingData.begin() + readPos, ioData->pendingData.end());
+                ioData->pendingData = std::move(leftover);
+            }
+
+            // Reset the WSA buffer pointers and request the next asynchronous receive operation
+            ioData->wsabuf.buf = (CHAR*)ioData->buffer;
+            ioData->wsabuf.len = sizeof(ioData->buffer);
             PostReceive(ioData);
         }
-        else {
-            // bytesTransferred == 0 or !success indicates the remote client (Go Server) disconnected
-            std::cout << "[TCP] Connection closed by remote host." << std::endl;
+        else
+        {
+            // bytesTransferred == 0 or !success indicates a clean closure or socket error
             closesocket(ioData->socket);
-            delete ioData; // Cleanup resources for this session
+            delete ioData;
         }
         break;
     }

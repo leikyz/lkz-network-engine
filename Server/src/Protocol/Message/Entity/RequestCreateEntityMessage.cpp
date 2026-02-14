@@ -45,6 +45,11 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
         ? SessionManager::GetSessionBySocket(tcpSocket)
         : SessionManager::GetSessionByAddress(senderAddr);
 
+    std::cout << "[RequestCreateEntityMessage] Processing request from " 
+              << (tcpSocket != INVALID_SOCKET ? "TCP socket" : "UDP address") 
+              << ": " << senderAddr.sin_addr.s_addr << ":" << ntohs(senderAddr.sin_port) 
+		<< " for entity super type ID: " << (int)entitySuperTypeId << std::endl;
+
     if (!session)
     {
         Logger::Log("RequestCreateEntityMessage: Session introuvable.", LogType::Warning);
