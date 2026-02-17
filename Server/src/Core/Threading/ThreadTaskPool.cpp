@@ -97,48 +97,21 @@ void ThreadTaskPool::SimulationThreadFunction()
     timeBeginPeriod(1);
 #endif
 
-    using namespace std::chrono;
-
-    auto lastTime = high_resolution_clock::now();
-    double accumulator = 0.0;
+    const auto frameDuration = std::chrono::milliseconds(20);
+    auto nextFrameStart = std::chrono::high_resolution_clock::now();
 
     while (!stopRequested)
     {
-        float currentDt = deltaTime.load(); 
-        if (currentDt <= 0.0f) currentDt = 0.02f;
+        float dt = 0.02f;
+        if (loopHook) loopHook(dt);
 
-        double targetFrameTime = static_cast<double>(currentDt);
+        nextFrameStart += frameDuration;
 
-        auto currentTime = high_resolution_clock::now();
-        duration<double> elapsedTime = currentTime - lastTime;
-        lastTime = currentTime;
-
-        accumulator += elapsedTime.count();
-
-        if (accumulator > 0.25) accumulator = 0.25;
-
-        while (accumulator >= targetFrameTime && !stopRequested)
-        {
-            if (loopHook) loopHook(currentDt);
-            accumulator -= targetFrameTime;
-        }
-
-        auto nextFrameTime = lastTime + duration<double>(targetFrameTime);
-        auto timeRemaining = nextFrameTime - high_resolution_clock::now();
-        long long msRemaining = duration_cast<milliseconds>(timeRemaining).count();
-
-        if (msRemaining > 1) {
-            std::this_thread::sleep_for(milliseconds(msRemaining - 1));
-        }
-
-        while (high_resolution_clock::now() < nextFrameTime && !stopRequested) {
-            std::this_thread::yield();
-        }
+        std::this_thread::sleep_until(nextFrameStart);
     }
 
 #ifdef _WIN32
     timeEndPeriod(1);
 #endif
-
     NavMeshQueryManager::CleanupThreadQuery();
 }

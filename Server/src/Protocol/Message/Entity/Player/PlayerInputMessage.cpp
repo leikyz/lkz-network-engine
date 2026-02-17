@@ -4,7 +4,7 @@
 #include <LKZ/Core/Manager/ClientManager.h>
 #include <LKZ/Core/Engine.h>
 #include <LKZ/Utility/Constants.h>
-#include "LKZ/Core/Threading/CommandQueue.h" // Required for the fix
+#include "LKZ/Core/Threading/CommandQueue.h" 
 
 PlayerInputMessage::PlayerInputMessage() {}
 
@@ -78,7 +78,7 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket
         });
 
     Serializer serializer;
-    serialize(serializer); 
+    serialize(serializer);
 
     const std::vector<uint8_t>& buffer = serializer.getBuffer();
     const std::string& className = getClassName();

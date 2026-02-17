@@ -4,14 +4,15 @@
 #include <iomanip>
 
 WindowsServer::WindowsServer(int port)
-    : port(port) {}
+    : port(port) {
+}
 
-WindowsServer::~WindowsServer() 
+WindowsServer::~WindowsServer()
 {
     running = false;
     if (completionPort) CloseHandle(completionPort);
     if (udpSocket != INVALID_SOCKET) closesocket(udpSocket);
-    if (tcpSocket != INVALID_SOCKET) closesocket(tcpSocket); 
+    if (tcpSocket != INVALID_SOCKET) closesocket(tcpSocket);
     WSACleanup();
 }
 
@@ -19,11 +20,11 @@ WindowsServer::~WindowsServer()
 
 
 
-void WindowsServer::Start() 
+void WindowsServer::Start()
 {
-	EventManager::BindEvents(); // Initialize event handlers
+    EventManager::BindEvents(); // Initialize event handlers
 
-	// Initialize Winsock
+    // Initialize Winsock
     WSADATA wsaData;
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -31,7 +32,7 @@ void WindowsServer::Start()
         return;
     }
 
-	// Create UDP socket
+    // Create UDP socket
     udpSocket = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 
     if (udpSocket == INVALID_SOCKET) {
@@ -39,7 +40,7 @@ void WindowsServer::Start()
         return;
     }
 
-	// Create TCP socket for HTTP
+    // Create TCP socket for HTTP
     tcpSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 
     if (tcpSocket == INVALID_SOCKET) {
@@ -47,7 +48,7 @@ void WindowsServer::Start()
         return;
     }
 
-	// Bind UDP socket
+    // Bind UDP socket
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -58,11 +59,11 @@ void WindowsServer::Start()
         return;
     }
 
-	// Bind TCP socket
+    // Bind TCP socket
     sockaddr_in httpAddr{};
     httpAddr.sin_family = AF_INET;
     httpAddr.sin_addr.s_addr = INADDR_ANY;
-    httpAddr.sin_port = htons(Constants::TCP_PORT); 
+    httpAddr.sin_port = htons(Constants::TCP_PORT);
 
     if (bind(tcpSocket, (sockaddr*)&httpAddr, sizeof(httpAddr))) {
         std::cerr << "[WindowsServer] TCP bind failed\n";
@@ -75,10 +76,10 @@ void WindowsServer::Start()
     std::cout << "[WindowsServer] TCP started on port " << Constants::TCP_PORT << "\n";
 }
 
-void WindowsServer::InitIOCP() 
+void WindowsServer::InitIOCP()
 {
     // Create a new IOCP port with default concurrency
-	completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0); 
+    completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 
     if (!completionPort)
     {
@@ -86,7 +87,7 @@ void WindowsServer::InitIOCP()
         return;
     }
 
-    if (!CreateIoCompletionPort((HANDLE)udpSocket, completionPort, 0, 0)) 
+    if (!CreateIoCompletionPort((HANDLE)udpSocket, completionPort, 0, 0))
     {
         std::cerr << "[WindowsServer] Associate UDP socket with IOCP failed\n";
         return;
@@ -98,7 +99,7 @@ void WindowsServer::InitIOCP()
         return;
     }
 
-	// Preallocate IoData (only for UDP receives)
+    // Preallocate IoData (only for UDP receives)
     for (size_t i = 0; i < Constants::MAX_PENDING_UDP_RECEIVES; i++)
     {
         auto ioData = std::make_unique<ReceiveUDPIoData>(Constants::NETWORK_BUFFER_SIZE);
@@ -106,9 +107,9 @@ void WindowsServer::InitIOCP()
         receiveUDPPool.push_back(std::move(ioData));
     }
 
-	// Preallocate Send IoData pool
+    // Preallocate Send IoData pool
     for (size_t i = 0; i < Constants::MAX_PENDING_UDP_RECEIVES; i++) {
-        
+
         auto io = std::make_unique<SendUDPIoData>(std::vector<uint8_t>(Constants::NETWORK_BUFFER_SIZE), sockaddr_in{});
         sendUDPPool.push_back(std::move(io));
         availableSends.push(sendUDPPool.back().get());
@@ -119,9 +120,9 @@ void WindowsServer::InitIOCP()
         sendTCPPool.push_back(std::move(io));
         availableTCPSends.push(sendTCPPool.back().get());
     }
-  
+
     listen(tcpSocket, SOMAXCONN); // Maximum pending connections
-    PostAccept(); 
+    PostAccept();
 
     running = true;
 }
@@ -185,11 +186,11 @@ void WindowsServer::Send(const sockaddr_in& clientAddr, std::span<const uint8_t>
     // Borrow a pre-allocated buffer from the pool.
     // We use a mutex to ensure that multiple threads don't grab the same buffer.
     SendUDPIoData* io = nullptr;
-    size_t poolSize = 0; 
+    size_t poolSize = 0;
 
     {
         std::lock_guard<std::mutex> lock(sendPoolMutex);
-        poolSize = availableSends.size(); 
+        poolSize = availableSends.size();
         if (!availableSends.empty()) {
             io = availableSends.front();
             availableSends.pop();
@@ -226,7 +227,7 @@ void WindowsServer::Send(const sockaddr_in& clientAddr, std::span<const uint8_t>
         &io->wsabuf,
         1,              // Sending 1 buffer
         nullptr,        // Bytes sent (ignored for async)
-        0,              
+        0,
         reinterpret_cast<sockaddr*>(&io->target),
         sizeof(io->target),
         &io->overlapped, // Connection to IOCP
@@ -287,9 +288,9 @@ void WindowsServer::PostAccept() {
     // This is a high-performance Windows-specific function that combines 
     // accepting a connection and (optionally) receiving the first block of data.
     BOOL result = AcceptEx(
-        tcpSocket,           
-        io->acceptSocket,    
-        io->addressBuffer,   
+        tcpSocket,
+        io->acceptSocket,
+        io->addressBuffer,
         0,                   // Number of bytes of data to receive (0 = just accept connection)
         sizeof(sockaddr_in) + 16, // Reserved space for local address info
         sizeof(sockaddr_in) + 16, // Reserved space for remote address info
@@ -351,7 +352,7 @@ void WindowsServer::PostReceive(BaseIo* baseIo)
                 pendingReceives--;
                 std::cerr << "[UDP] WSARecvFrom failed: " << err << "\n";
             }
-                
+
         }
         break;
     }

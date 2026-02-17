@@ -81,13 +81,13 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                 Vector3& playerPos = components.positions[playerEntity].position;
                 float distSq = (playerPos - position).LengthSquared();
 
-               /* if (distSq < minDistanceSq)
-                {*/
-                    minDistanceSq = distSq;
-                    nearestPlayerEntity = playerEntity;
-                    targetPos = playerPos;
-                    foundPlayer = true;
-               /* }*/
+                /* if (distSq < minDistanceSq)
+                 {*/
+                minDistanceSq = distSq;
+                nearestPlayerEntity = playerEntity;
+                targetPos = playerPos;
+                foundPlayer = true;
+                /* }*/
             }
 
             // Search first player created
@@ -161,7 +161,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                     crowd->resetMoveTarget(ai.crowdAgentIndex);
                 }
             }
-        } 
+        }
 
         // --- NETWORK SYNCHRONIZATION (Always active for fluidity) ---
         ai.timeSinceLastSend += deltaTime;
@@ -181,7 +181,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                     auto& msg = sessionMessages[session];
                     msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
 
-					// Send in batches of 100 updates to avoid large packets
+                    // Send in batches of 100 updates to avoid large packets
                     if (msg.updates.size() >= 100)
                     {
                         Serializer s;
@@ -189,7 +189,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                         const std::vector<uint8_t>& buffer = s.getBuffer();
                         const std::string& className = msg.getClassName();
 
-       
+
                         for (const auto& player : session->players)
                         {
                             if (player.isUdpReady)
@@ -198,7 +198,6 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                             }
                         }
 
-                        // 4. On vide les mises à jour pour recommencer à accumuler
                         msg.updates.clear();
                     }
                 }
@@ -206,25 +205,19 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
         }
     }
 
-    // Broadcast messages grouped by Lobby
     for (auto& [session, msg] : sessionMessages)
     {
         if (!msg.updates.empty())
         {
-            // 1. OPTIMISATION : On sérialise UNE SEULE FOIS pour tout le monde
             Serializer s;
             msg.serialize(s);
 
-            // On récupère le buffer (évite de copier le vector à chaque appel)
             const std::vector<uint8_t>& buffer = s.getBuffer();
 
-            // 2. On parcourt les joueurs de la session
             for (const auto& player : session->players)
             {
-                // 3. SÉCURITÉ : On n'envoie qu'à ceux qui ont fait le Handshake UDP
                 if (player.isUdpReady)
                 {
-                    // Envoi direct (Coût faible, c'est juste un appel système sendto)
                     Engine::Instance().Server()->Send(player.udpAddr, buffer, msg.getClassName());
                 }
             }

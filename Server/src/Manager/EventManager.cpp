@@ -37,7 +37,7 @@ EventManager::MessageHandler EventManager::messageHandlers[256] = { nullptr };
 
 void EventManager::BindEvents()
 {
-    std::cout << "[EventManager] Initialize events." << std::endl;  
+    std::cout << "[EventManager] Initialize events." << std::endl;
 
     EventManager::registerHandler<CreateClientMessage>(1);
     EventManager::registerHandler<ServerInformationsMessage>(2);
@@ -68,7 +68,7 @@ void EventManager::BindEvents()
 }
 
 template<typename T>
-void EventManager::registerHandler(uint8_t id) 
+void EventManager::registerHandler(uint8_t id)
 {
 
     messageHandlers[id] = &handleMessage<T>;
@@ -108,18 +108,18 @@ void EventManager::processMessage(std::span<const uint8_t> data, const sockaddr_
 
 template<typename T>
 void EventManager::handleMessage(std::span<const uint8_t> data, const sockaddr_in& senderAddr, SOCKET tcpSocket)
-{ 
+{
     T msg;
     Deserializer deserializer(data);
 
     std::string name = typeid(msg).name();
-    name = name.substr(7); 
+    name = name.substr(7);
 
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(senderAddr.sin_addr), ip, INET_ADDRSTRLEN);
     // added +1 because we removed 1 byte before handled event (ID)
   /*  Logger::Log(std::format("{} ({} bytes) [{}:{}]", name, data.size() + 1, ip, ntohs(senderAddr.sin_port)), LogType::Received);*/
-	// Parse and process the message
+    // Parse and process the message
     msg.deserialize(deserializer);
     msg.process(senderAddr, tcpSocket);
 }

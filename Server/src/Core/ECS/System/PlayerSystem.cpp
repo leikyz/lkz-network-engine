@@ -89,7 +89,7 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
                 break;
             }
         }
-        
+
         if (inputComp.inputQueue.size() > 1) {
             Logger::Log("Accumulation détectée : " + std::to_string(inputComp.inputQueue.size()) + " inputs", LogType::Warning);
         }
@@ -185,10 +185,10 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
         inputComp.inputQueue.clear();
 
-       /* Logger::Log("[PlayerSystem] Entity: " + std::to_string(entity) +
-            " | Pos: (" + std::to_string(pos.x) + ", " +
-            std::to_string(pos.y) + ", " +
-            std::to_string(pos.z) + ")", LogType::Info);*/
+        /* Logger::Log("[PlayerSystem] Entity: " + std::to_string(entity) +
+             " | Pos: (" + std::to_string(pos.x) + ", " +
+             std::to_string(pos.y) + ", " +
+             std::to_string(pos.z) + ")", LogType::Info);*/
 
         if (hasProcessed)
         {

@@ -9,6 +9,7 @@ namespace Constants
 
     inline constexpr int MAX_PENDING_TCP_RECEIVES = 128; // Maximum number of pending TCP receive operations
 	inline constexpr int MAX_PENDING_UDP_RECEIVES = 256; // Maximum number of pending UDP receive operations
+    inline constexpr int MAX_PENDING_UDP_SENDS = 1024;
     inline constexpr int TCP_PORT = 8081; // Must be match with go server
 	inline constexpr int UDP_PORT = 5555;    // Default server port
 	inline const char* const SERVER_IP = "104.194.157.137"; // Default server IP address
@@ -66,7 +67,7 @@ namespace Constants
 
 	// ----- ECS -----
 
-	inline constexpr float PLAYER_MOVE_SPEED = 3.0f; // Player movement speed in units per second. 0.2 crea | 1.0 home
+	inline constexpr float PLAYER_MOVE_SPEED = 6.0f; // Player movement speed in units per second. 0.2 crea | 1.0 home
     inline constexpr float PLAYER_WALK_SPEED_MULTIPLICATOR = 1.0;
     inline constexpr float PLAYER_RUN_SPEED_MULTIPLICATOR = 2.0;
     inline constexpr float PLAYER_WALK_ARMED_SPEED_MULTIPLICATOR = 0.8;
@@ -75,7 +76,7 @@ namespace Constants
 	inline constexpr float PLAYER_MOVE_THRESHOLD = 0.02f; // Minimum distance change to trigger a position update.
 	inline constexpr int PLAYER_MESSAGE_RATE = 5.0f; 	 // Send player position updates every N ticks.
 
-	inline constexpr int AI_MESSAGE_RATE = 0.2; // Send AI position updates every N ticks.    
+	inline constexpr int AI_MESSAGE_RATE = 0.5; // Send AI position updates every N ticks.    
 	inline constexpr float AI_REPATH_RATE = 1.0f; // AI repath interval in seconds.
 	inline constexpr float AI_STOP_DISTANCE = 2.0f; // Distance at which AI stops moving towards target.
 	inline constexpr float AI_STOP_DISTANCE_SQ = AI_STOP_DISTANCE * AI_STOP_DISTANCE; // Squared stop distance for efficiency.
