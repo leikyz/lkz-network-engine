@@ -186,7 +186,8 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                     params.queryFilterType = Constants::AGENT_QUERY_FILTER_TYPE;
                     params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
                     params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
-                    params.updateFlags = Constants::AGENT_UPDATE_FLAGS & ~DT_CROWD_OBSTACLE_AVOIDANCE;
+                    params.updateFlags = DT_CROWD_OBSTACLE_AVOIDANCE | DT_CROWD_SEPARATION;
+                    params.obstacleAvoidanceType = 3;
                     params.userData = &aiComp;
 
                     float spawnPos[3] = { randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z };

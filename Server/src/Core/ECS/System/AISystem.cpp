@@ -36,11 +36,19 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
     const dtQueryFilter* filter = crowd->getFilter(Constants::AGENT_QUERY_FILTER_TYPE);
     std::unordered_map<Session*, MoveEntitiesMessage> sessionMessages;
 
-    // Distance and logic constants
+    // --- CONFIGURATION DES DISTANCES ---
     const float AI_AGGRO_RANGE_SQ = 1000.0f * 1000.0f;
-    const float STOP_DISTANCE_SQ = 1.5f * 1.5f;
-    const float RESUME_CHASE_DISTANCE_SQ = 2.0f * 2.0f;
-    const float UPDATE_THRESHOLD_SQ = 0.7f * 0.7f;
+    const float STOP_DISTANCE_SQ = 1.5f * 1.5f;          // Distance d'arrêt (attaque)
+    const float RESUME_CHASE_DISTANCE_SQ = 2.0f * 2.0f;  // Distance pour reprendre la course
+
+    // DISTANCE DE COMBAT RAPPROCHÉ (4 mètres)
+    // En dessous de cette distance, le zombie devient "frénétique" et update très vite
+    const float CLOSE_COMBAT_RANGE_SQ = 4.0f * 4.0f;
+
+    // SEUIL DE RÉACTION (6cm)
+    // Si le joueur bouge de plus de 6cm, le zombie recalcule le chemin
+    const float UPDATE_THRESHOLD_SQ = 0.25f * 0.25f;
+
     const int MAX_PATH_UPDATES_PER_TICK = 1000;
     int pathUpdatesThisTick = 0;
 
@@ -51,19 +59,26 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
         const dtCrowdAgent* agent = crowd->getAgent(ai.crowdAgentIndex);
         if (!agent || !agent->active) continue;
 
-        // This distributes the CPU load by only updating 25% of entities per frame.
+        // LOAD BALANCING : On ne traite que 25% des entités par frame pour sauver le CPU
         if (entity % 4 == globalFrameCount % 4)
         {
             Vector3& position = components.positions[entity].position;
+
+            // Optimization: Get Session inside the check to avoid lookup on skipped entities
             Session* session = EntityManager::Instance().GetSessionByEntity(entity);
             if (!session) continue;
 
-            // Adjust timer decrement because we only enter this block every 4 frames
+            // --- 1. GESTION DU TIMER DE PATHFINDING ---
+            // On décrémente 4x plus vite car on passe ici 1 frame sur 4
             ai.repathTimer -= (deltaTime * 4.0f);
 
             bool isIdle = (agent->targetState == DT_CROWDAGENT_TARGET_NONE) ||
                 (agent->targetState == DT_CROWDAGENT_TARGET_FAILED);
+
+            // Le timer est expiré OU on est idle
             bool timerExpired = (ai.repathTimer <= 0.0f);
+
+            // On limite le nombre de calculs lourds par frame globale
             bool shouldAttemptPathing = (timerExpired || isIdle) && (pathUpdatesThisTick < MAX_PATH_UPDATES_PER_TICK);
 
             Entity nearestPlayerEntity = 0;
@@ -71,64 +86,71 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
             Vector3 targetPos;
             bool foundPlayer = false;
 
-            // Search for the nearest player within the same lobby
+            // --- 2. RECHERCHE DU JOUEUR LE PLUS PROCHE ---
             for (auto& [playerEntity, input] : components.playerInputs)
             {
                 if (components.positions.find(playerEntity) == components.positions.end()) continue;
+
                 Session* playerSession = EntityManager::Instance().GetSessionByEntity(playerEntity);
                 if (playerSession != session) continue;
 
                 Vector3& playerPos = components.positions[playerEntity].position;
                 float distSq = (playerPos - position).LengthSquared();
 
-                /* if (distSq < minDistanceSq)
-                 {*/
-                minDistanceSq = distSq;
-                nearestPlayerEntity = playerEntity;
-                targetPos = playerPos;
-                foundPlayer = true;
-                /* }*/
+                if (distSq < minDistanceSq)
+                {
+                    minDistanceSq = distSq;
+                    nearestPlayerEntity = playerEntity;
+                    targetPos = playerPos;
+                    foundPlayer = true;
+                }
             }
 
-            // Search first player created
-            //for (auto& [playerEntity, input] : components.playerInputs)
-            //{
-            //    if (components.positions.find(playerEntity) == components.positions.end()) continue;
-
-            //    Lobby* playerLobby = EntityManager::Instance().GetLobbyByEntity(playerEntity);
-            //    if (playerLobby != lobby) continue;
-
-            //    Vector3& playerPos = components.positions[playerEntity].position;
-
-            //    nearestPlayerEntity = playerEntity;
-            //    targetPos = playerPos;
-            //    foundPlayer = true;
-            //    break;
-            //}
-
-
-            // MOVEMENT LOGIC (Updated only during the entity's turn)
+            // --- 3. LOGIQUE DE MOUVEMENT ---
             if (foundPlayer && minDistanceSq < AI_AGGRO_RANGE_SQ)
             {
+                // Est-ce qu'on est en corps à corps ? (Moins de 4m)
+                bool isCloseCombat = minDistanceSq < CLOSE_COMBAT_RANGE_SQ;
+
+                // FIX ANTI-SURPLACE : Si on est très proche et que le timer n'est pas encore reset,
+                // mais qu'il est proche de la fin, on force le pathing pour suivre le joueur qui tourne autour.
+                if (isCloseCombat && !shouldAttemptPathing && pathUpdatesThisTick < MAX_PATH_UPDATES_PER_TICK)
+                {
+                    // Si le timer est à moins de 0.05s, on force l'update
+                    if (ai.repathTimer < 0.05f) shouldAttemptPathing = true;
+                }
+
                 if (minDistanceSq < STOP_DISTANCE_SQ)
                 {
-                    // Stop distance reached
+                    // On est arrivé au contact : STOP
                     if (ai.targetPosition.has_value() || !isIdle)
                     {
                         ai.targetPosition.reset();
                         crowd->resetMoveTarget(ai.crowdAgentIndex);
                         dtCrowdAgent* mutableAgent = crowd->getEditableAgent(ai.crowdAgentIndex);
-                        // Force velocity to zero to prevent sliding
+                        // On coupe la vélocité pour éviter qu'il glisse
                         if (mutableAgent) { memset(mutableAgent->vel, 0, sizeof(float) * 3); }
                     }
                 }
                 else if (minDistanceSq > RESUME_CHASE_DISTANCE_SQ || ai.targetPosition.has_value())
                 {
-                    // Chasing or updating trajectory
+                    // EN CHASSE
                     if (shouldAttemptPathing)
                     {
                         pathUpdatesThisTick++;
-                        ai.repathTimer = 0.2f + ((rand() % 10) / 100.0f); // Randomized repath delay
+
+                        // --- FIX TIMER ADAPTATIF ---
+                        if (isCloseCombat)
+                        {
+                            // MODE FRÉNÉTIQUE : Update très rapide (0.05s à 0.10s)
+                            // C'est ça qui empêche le zombie de faire du surplace quand tu tournes autour
+                            ai.repathTimer = 0.05f + ((rand() % 5) / 100.0f);
+                        }
+                        else
+                        {
+                            // MODE NORMAL : Update standard (0.20s à 0.40s) pour économiser le CPU
+                            ai.repathTimer = 0.2f + ((rand() % 20) / 100.0f);
+                        }
 
                         const float extents[3] = { 2.0f, 4.0f, 2.0f };
                         dtPolyRef targetRef;
@@ -143,7 +165,7 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                             float dz = agent->targetPos[2] - nearestPt[2];
                             float distToCurrentTargetSq = dx * dx + dy * dy + dz * dz;
 
-                            // Only request a new path if the player moved significantly
+                            // On vérifie si la cible a bougé de plus de 6cm (UPDATE_THRESHOLD_SQ)
                             if (agent->targetState != DT_CROWDAGENT_TARGET_VALID || distToCurrentTargetSq > UPDATE_THRESHOLD_SQ)
                             {
                                 ai.targetPosition = targetPos;
@@ -155,63 +177,66 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
             }
             else
             {
-                // No valid target or player out of range: reset objective
+                // Pas de joueur trouvé ou trop loin -> Reset
                 if (ai.targetPosition.has_value()) {
                     ai.targetPosition.reset();
                     crowd->resetMoveTarget(ai.crowdAgentIndex);
                 }
             }
-        }
 
-        // --- NETWORK SYNCHRONIZATION (Always active for fluidity) ---
-        ai.timeSinceLastSend += deltaTime;
-        if (ai.timeSinceLastSend >= Constants::AI_MESSAGE_RATE)
-        {
-            Vector3 currentPos = { agent->npos[0], agent->npos[1], agent->npos[2] };
-            float distSq = (currentPos - ai.lastSentPosition).LengthSquared();
+            // --- 4. SYNCHRONISATION RÉSEAU ---
 
-            // Delta compression: only send update if the entity moved more than 10cm
-            if (distSq > 0.01f)
+            // CORRECTION IMPORTANTE : Multiplier deltaTime par 4.0f
+            // Sinon le temps réseau passe 4x trop lentement à cause du "if (entity % 4)"
+            ai.timeSinceLastSend += (deltaTime * 4.0f);
+
+            if (ai.timeSinceLastSend >= Constants::AI_MESSAGE_RATE)
             {
-                ai.timeSinceLastSend = 0.0f;
-                ai.lastSentPosition = currentPos;
+                Vector3 currentPos = { agent->npos[0], agent->npos[1], agent->npos[2] };
+                float distSq = (currentPos - ai.lastSentPosition).LengthSquared();
 
-                Session* session = EntityManager::Instance().GetSessionByEntity(entity);
-                if (session) {
-                    auto& msg = sessionMessages[session];
-                    msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
+                // Compression Delta : on envoie seulement si ça a bougé de 10cm
+                if (distSq > 0.01f)
+                {
+                    ai.timeSinceLastSend = 0.0f; // Reset du timer réseau
+                    ai.lastSentPosition = currentPos;
 
-                    // Send in batches of 100 updates to avoid large packets
-                    if (msg.updates.size() >= 100)
-                    {
-                        Serializer s;
-                        msg.serialize(s);
-                        const std::vector<uint8_t>& buffer = s.getBuffer();
-                        const std::string& className = msg.getClassName();
+                    if (session) {
+                        auto& msg = sessionMessages[session];
+                        // On ajoute la position au paquet groupé
+                        // Note : Assure-toi que le Yaw (Rotation) est géré soit ici, soit calculé côté client (LookAt)
+                        msg.addUpdate(entity, currentPos.x, currentPos.y, currentPos.z);
 
-
-                        for (const auto& player : session->players)
+                        // Si le paquet est plein (100 entités), on envoie tout de suite
+                        if (msg.updates.size() >= 100)
                         {
-                            if (player.isUdpReady)
-                            {
-                                Engine::Instance().Server()->Send(player.udpAddr, buffer, msg.getClassName());
-                            }
-                        }
+                            Serializer s;
+                            msg.serialize(s);
+                            const std::vector<uint8_t>& buffer = s.getBuffer();
 
-                        msg.updates.clear();
+                            for (const auto& player : session->players)
+                            {
+                                if (player.isUdpReady)
+                                {
+                                    Engine::Instance().Server()->Send(player.udpAddr, buffer, msg.getClassName());
+                                }
+                            }
+                            msg.updates.clear();
+                        }
                     }
                 }
             }
         }
     }
 
+    // --- 5. ENVOI DES MESSAGES RESTANTS ---
+    // On envoie les paquets qui n'étaient pas pleins (< 100 entités)
     for (auto& [session, msg] : sessionMessages)
     {
         if (!msg.updates.empty())
         {
             Serializer s;
             msg.serialize(s);
-
             const std::vector<uint8_t>& buffer = s.getBuffer();
 
             for (const auto& player : session->players)

@@ -37,19 +37,19 @@ namespace Constants
 
 	// ----- Default Agent Settings ----- must match those used in World.cpp and Unity navmesh setup
 
-    inline constexpr float AGENT_RADIUS = 0.5f;       // The physical radius of a typical AI agent.
-    inline constexpr float AGENT_HEIGHT = 1.5f;      // The height of an agent (e.g., for humanoid navigation).
+    inline constexpr float AGENT_RADIUS = 0.2f;       // The physical radius of a typical AI agent.
+    inline constexpr float AGENT_HEIGHT = 1.8f;      // The height of an agent (e.g., for humanoid navigation).
     inline constexpr float AGENT_MAX_CLIMB = 1.5f;
-    inline constexpr float AGENT_MAX_SLOPE = 60.0f; // in degrees
-    inline constexpr float AGENT_MAX_ACCELERATION = 1.0f; // Maximum acceleration allowed for an agent.
-    inline constexpr float AGENT_MAX_SPEED = 3.0f;       // Maximum movement speed of an agent (units per second).
+    inline constexpr float AGENT_MAX_SLOPE = 45.0f; // in degrees
+    inline constexpr float AGENT_MAX_ACCELERATION = 100.0f; // Maximum acceleration allowed for an agent.
+    inline constexpr float AGENT_MAX_SPEED = 2.5f;       // Maximum movement speed of an agent (units per second).
 
     // ----- Avoidance & Collision -----
 
     inline constexpr float AGENT_COLLISION_QUERY_RANGE = AGENT_RADIUS * 4.0f;      // Distance around the agent used to query nearby agents for collision avoidance.
     inline constexpr float AGENT_PATH_OPTIMIZATION_RANGE = AGENT_RADIUS * 15.0f;  // How far the agent will look ahead to optimize its path (avoid walls, etc.).
     inline constexpr int AGENT_OBSTACLE_AVOIDANCE_TYPE = 3;                      // Quality level of obstacle avoidance: 0 = Low, 1 = Medium, 2 = Good, 3 = High (default: 3)
-    inline constexpr float AGENT_SEPARATION_WEIGHT = 0.3f;                      // How strongly agents try to stay away from each other.
+    inline constexpr float AGENT_SEPARATION_WEIGHT = 0.5f;                      // How strongly agents try to stay away from each other.
 
     // ----- Update Agent Flags -----
         
@@ -81,8 +81,8 @@ namespace Constants
 	inline constexpr float AI_STOP_DISTANCE = 2.0f; // Distance at which AI stops moving towards target.
 	inline constexpr float AI_STOP_DISTANCE_SQ = AI_STOP_DISTANCE * AI_STOP_DISTANCE; // Squared stop distance for efficiency.
 
-	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 2.5, 2.35f, 1.5f }; // Default spawn position for the first player.
-	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { 2.0, 2.35f, 1.5f }; // Default spawn position for the second player.
+	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 73, 1.2, 88 }; // Default spawn position for the first player.
+	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { 76, 1.2, 88 }; // Default spawn position for the second player.
 	inline constexpr Vector3 THIRD_PLAYER_SPAWN_POSITION = { -1.247f, 0.0f, -1.2856f }; // Default spawn position for the third player.
 	inline constexpr Vector3 FOURTH_PLAYER_SPAWN_POSITION = { 2.793f, 0.0f, -1.7856f }; // Default spawn position for the fourth player
 

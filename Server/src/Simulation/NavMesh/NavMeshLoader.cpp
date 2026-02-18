@@ -124,8 +124,8 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
 
     rcCalcBounds(verts.data(), nverts, cfg.bmin, cfg.bmax);
 
-    cfg.cs = 0.30f;
-    cfg.ch = 0.20f;
+    cfg.cs = 0.10f;
+    cfg.ch = 0.10f;
 
 	float agentHeight = Constants::AGENT_HEIGHT;
 	float agentRadius = Constants::AGENT_RADIUS;
@@ -136,11 +136,12 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     cfg.walkableSlopeAngle = agentMaxSlope;
     cfg.walkableHeight = (int)ceilf(agentHeight / cfg.ch);
     cfg.walkableClimb = (int)floorf(agentMaxClimb / cfg.ch);
-    cfg.walkableRadius = (int)ceilf(agentRadius / cfg.cs); 
-
+ /*   cfg.walkableRadius = (int)ceilf(agentRadius / cfg.cs); */
+    cfg.walkableRadius = 0;
     cfg.maxEdgeLen = (int)(12.0f / cfg.cs);
     cfg.maxSimplificationError = 1.3f;
-    cfg.minRegionArea = (int)(8.0f / (cfg.cs * cfg.cs));
+ /*   cfg.minRegionArea = (int)(8.0f / (cfg.cs * cfg.cs));*/
+    cfg.minRegionArea = 0;
     cfg.mergeRegionArea = (int)(20.0f / (cfg.cs * cfg.cs));
     cfg.maxVertsPerPoly = 6;
     cfg.detailSampleDist = 6.0f;
@@ -184,10 +185,10 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     }
     rcFreeHeightField(solid);
 
-    if (!rcErodeWalkableArea(&ctx, cfg.walkableRadius, *chf))
-    {
-        Logger::Log("BuildNavMesh Error: Could not erode.", LogType::Error); rcFreeCompactHeightfield(chf); return nullptr;
-    }
+    //if (!rcErodeWalkableArea(&ctx, cfg.walkableRadius, *chf))
+    //{
+    //    Logger::Log("BuildNavMesh Error: Could not erode.", LogType::Error); rcFreeCompactHeightfield(chf); return nullptr;
+    //}
     if (!rcBuildDistanceField(&ctx, *chf))
     {
         Logger::Log("BuildNavMesh Error: Could not build distance field.", LogType::Error); rcFreeCompactHeightfield(chf); return nullptr;
@@ -423,7 +424,7 @@ bool NavMeshLoader::LoadFromFile(const std::string& path)
         }
         catch (const std::exception& e)
         {
-            Logger::Log(std::format("Error parsing index line [{}]: '{}'. Error: {}", i, line, e.what()), LogType::Error);
+            Logger::Log(std::format("Error parsing index line [{}]: '{}'. Error: gb{}", i, line, e.what()), LogType::Error);
             file.close(); return false;
         }
     }

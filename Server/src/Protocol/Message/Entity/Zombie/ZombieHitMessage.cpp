@@ -41,15 +41,20 @@ void ZombieHitMessage::deserialize(Deserializer& deserializer)
 
 void ZombieHitMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
+    Session* session = (tcpSocket != INVALID_SOCKET)
+        ? SessionManager::GetSessionBySocket(tcpSocket)
+		: SessionManager::GetSessionByAddress(senderAddr);
 
-    /*Client* client = ClientManager::getClientByAddress(senderAddr);
-    if (!client) return;
-
-    Session* session = SessionManager::GetSession(client->lobbyId);
     if (!session) return;
 
     Serializer serializer;
     serialize(serializer);
 
-    Engine::Instance().Server()->SendToMultiple(session->clientsAddress, serializer.getBuffer(), getClassName(), &senderAddr);*/
+    for (const auto& player : session->players)
+    {
+        Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), getClassName());
+
+    }
+
+   /* Engine::Instance().Server()->SendToMultiple(session->clientsAddress, serializer.getBuffer(), getClassName(), &senderAddr);*/
 }

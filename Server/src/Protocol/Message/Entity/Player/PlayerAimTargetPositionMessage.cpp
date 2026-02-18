@@ -35,17 +35,16 @@ void PlayerAimTargetPositionMessage::deserialize(Deserializer& deserializer)
 
 void PlayerAimTargetPositionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
-   /* Serializer serializer;
+    Serializer serializer;
     serialize(serializer);
 
-    int sessionId = ClientManager::getClientByAddress(senderAddr)->lobbyId;
-	Session* session = SessionManager::GetSession(sessionId);
+	Session* session = SessionManager::GetSessionByAddress(senderAddr);
 
-    Engine::Instance().Server()->SendToMultiple(
-        session->clientsAddress,
-        serializer.getBuffer(),
-        getClassName(),
-        &senderAddr);*/
+    for (const auto& player : session->players)
+    {
+            Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), getClassName());
+    }
+
 }
 
 
