@@ -107,12 +107,12 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
         Logger::Log("BuildNavMesh Error: No vertex or index data loaded.", LogType::Error);
         return nullptr;
     }
-
+    float yOffset = -0.5f;
     std::vector<float> verts(m_vertices.size() * 3);
     for (size_t i = 0; i < m_vertices.size(); ++i)
     {
         verts[i * 3 + 0] = m_vertices[i].x;
-        verts[i * 3 + 1] = m_vertices[i].y;
+        verts[i * 3 + 1] = m_vertices[i].y /*+ yOffset*/;
         verts[i * 3 + 2] = m_vertices[i].z;
     }
 
@@ -125,7 +125,7 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     rcCalcBounds(verts.data(), nverts, cfg.bmin, cfg.bmax);
 
     cfg.cs = 0.10f;
-    cfg.ch = 0.10f;
+    cfg.ch = 0.05f;
 
 	float agentHeight = Constants::AGENT_HEIGHT;
 	float agentRadius = Constants::AGENT_RADIUS;

@@ -59,6 +59,7 @@ void PlayerInputMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket
     packet.yaw = this->yaw;
     packet.isAiming = this->isAiming;
     packet.isRunning = this->isSprinting;
+    
     packet.isArmed = this->isArmed;
     packet.sequenceId = this->sequenceId;
 
