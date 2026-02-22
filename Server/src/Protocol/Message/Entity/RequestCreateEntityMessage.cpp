@@ -41,14 +41,16 @@ void RequestCreateEntityMessage::deserialize(Deserializer& deserializer)
 
 void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
+
     Session* session = (tcpSocket != INVALID_SOCKET)
         ? SessionManager::GetSessionBySocket(tcpSocket)
         : SessionManager::GetSessionByAddress(senderAddr);
 
-    std::cout << "[RequestCreateEntityMessage] Processing request from " 
-              << (tcpSocket != INVALID_SOCKET ? "TCP socket" : "UDP address") 
-              << ": " << senderAddr.sin_addr.s_addr << ":" << ntohs(senderAddr.sin_port) 
-		<< " for entity super type ID: " << (int)entitySuperTypeId << std::endl;
+
+    std::cout << "[RequestCreateEntityMessage] Processing request from "
+        << (tcpSocket != INVALID_SOCKET ? "TCP socket" : "UDP address")
+        << ": " << senderAddr.sin_addr.s_addr << ":" << ntohs(senderAddr.sin_port)
+        << " for entity super type ID: " << (int)entitySuperTypeId << std::endl;
 
     if (!session)
     {
@@ -135,7 +137,7 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
 
                 if (p.id != player->id && p.tcpSocket != INVALID_SOCKET)
                 {
-                   
+
 
                     server->SendReliable(p.tcpSocket, buffer);
                 }
@@ -147,31 +149,56 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
         ThreadManager::GetPool("pathfinding")->EnqueueTask([=]() {
             auto& world = Engine::Instance().GetWorld();
             dtNavMeshQuery* simQuery = NavMeshQueryManager::GetThreadLocalQuery(world.getNavMesh());
-            Vector3 randomSpawnPoint = world.getRandomNavMeshPoint(simQuery);
+
+            // Define potential spawn points from Constants
+            Vector3 spawnPoints[] = {
+                Constants::FIRST_ZOMBIE_SPAWN_POSITION,
+                Constants::SECOND_ZOMBIE_SPAWN_POSITION,
+                Constants::THIRD_ZOMBIE_SPAWN_POSITION
+            };
+
+            // Randomly select one of the three spawn positions
+            Vector3 selectedSpawn = spawnPoints[rand() % 3];
+
+            // Ensure the selected point is snapped correctly to the NavMesh
+            float polyPickExt[3] = { 2.0f, 4.0f, 2.0f };
+            dtPolyRef startPoly;
+            float nearestPos[3];
+            simQuery->findNearestPoly(&selectedSpawn.x, polyPickExt, world.getCrowd()->getFilter(0), &startPoly, nearestPos);
+
+            Vector3 finalSpawn = { nearestPos[0], nearestPos[1], nearestPos[2] };
 
             CommandQueue::Instance().Push([=]() {
                 auto& components = ComponentManager::Instance();
                 auto& world = Engine::Instance().GetWorld();
+
+                // Create the entity in the ECS
                 Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(superTypeId), components, session);
 
-                components.AddComponent(entity, PositionComponent{ randomSpawnPoint });
+                // Add spatial components using the fixed spawn point
+                components.AddComponent(entity, PositionComponent{ finalSpawn });
                 components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
 
+                // Set up AI logic: get a random point for the initial wander target
                 float initialRepathDelay = ((rand() % 100) / 100.0f) * 2.0f;
                 Vector3 initialTarget = world.getRandomNavMeshPoint(simQuery);
+
+                // Fallback if the random target search fails
                 if (initialTarget.x == 0 && initialTarget.z == 0) initialTarget = { 10.0f, 0.0f, 10.0f };
 
                 components.AddComponent(entity, AIComponent{
                     initialTarget,
                     initialRepathDelay,
-                    -1,
-                    0.0f,
+                    -1,     // Initial target ID or state
+                    0.0f,   // Initial timer
                     });
 
+                // Link AI component pointers to spatial components for direct access
                 auto& aiComp = components.ai[entity];
                 aiComp.posPtr = &components.positions[entity];
                 aiComp.rotPtr = &components.rotations[entity];
 
+                // Add the agent to the DetourCrowd simulation
                 dtCrowd* crowd = world.getCrowd();
                 if (crowd)
                 {
@@ -186,27 +213,32 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                     params.queryFilterType = Constants::AGENT_QUERY_FILTER_TYPE;
                     params.obstacleAvoidanceType = Constants::AGENT_OBSTACLE_AVOIDANCE_TYPE;
                     params.separationWeight = Constants::AGENT_SEPARATION_WEIGHT;
+
+                    // Enable obstacle avoidance and separation between agents
                     params.updateFlags = DT_CROWD_OBSTACLE_AVOIDANCE | DT_CROWD_SEPARATION;
-                    params.obstacleAvoidanceType = 3;
+                    params.obstacleAvoidanceType = 3; // Use high-quality avoidance params
                     params.userData = &aiComp;
 
-                    float spawnPos[3] = { randomSpawnPoint.x, randomSpawnPoint.y, randomSpawnPoint.z };
+                    float spawnPos[3] = { finalSpawn.x, finalSpawn.y, finalSpawn.z };
                     int agentIdx = crowd->addAgent(spawnPos, &params);
-                    if (agentIdx != -1) components.ai[entity].crowdAgentIndex = agentIdx;
+
+                    if (agentIdx != -1)
+                        components.ai[entity].crowdAgentIndex = agentIdx;
                 }
 
+                // Prepare the network message to inform clients of the new entity
                 CreateEntityMessage createEntityMsg;
-                createEntityMsg.entityTypeId = 3 + rand() % 3;
+                createEntityMsg.entityTypeId = 3 + rand() % 3; // Randomize visual variation
                 createEntityMsg.entityId = entity;
-                createEntityMsg.posX = randomSpawnPoint.x;
-                createEntityMsg.posY = randomSpawnPoint.y;
-                createEntityMsg.posZ = randomSpawnPoint.z;
+                createEntityMsg.posX = finalSpawn.x;
+                createEntityMsg.posY = finalSpawn.y;
+                createEntityMsg.posZ = finalSpawn.z;
 
                 Serializer serializer;
                 createEntityMsg.serialize(serializer);
-
                 const std::vector<uint8_t>& buffer = serializer.getBuffer();
 
+                // Broadcast the new entity to all connected players via TCP
                 for (const auto& p : session->players)
                 {
                     if (p.tcpSocket != INVALID_SOCKET)
