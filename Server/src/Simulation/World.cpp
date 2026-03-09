@@ -74,30 +74,30 @@ void World::UpdateCrowd(double deltaTime)
 	crowd->update(static_cast<float>(deltaTime), nullptr);
 
 	const int agentCount = crowd->getAgentCount();
+	auto& components = ComponentManager::Instance();
+
 	for (int i = 0; i < agentCount; ++i)
 	{
 		const dtCrowdAgent* agent = crowd->getAgent(i);
 		if (!agent->active || !agent->params.userData) continue;
 
-		// Get the associated AIComponent
-		AIComponent* ai = static_cast<AIComponent*>(agent->params.userData);
+		Entity entity = (Entity)((uintptr_t)agent->params.userData);
 
-		// 1. Sync Position
-		if (ai->posPtr) {
-			ai->posPtr->position.x = agent->npos[0];
-			ai->posPtr->position.y = agent->npos[1];
-			ai->posPtr->position.z = agent->npos[2];
-		}
+		if (components.ai.find(entity) == components.ai.end()) continue;
 
-		// Optimized sync rotation based on velocity
-		if (ai->rotPtr) 
+		AIComponent& ai = components.ai[entity];
+		PositionComponent& pos = components.positions[entity];
+		RotationComponent& rot = components.rotations[entity];
+
+		pos.position.x = agent->npos[0];
+		pos.position.y = agent->npos[1];
+		pos.position.z = agent->npos[2];
+
+		float velSq = agent->vel[0] * agent->vel[0] + agent->vel[2] * agent->vel[2];
+		if (velSq > 0.01f)
 		{
-			float velSq = agent->vel[0] * agent->vel[0] + agent->vel[2] * agent->vel[2];
-			if (velSq > 0.01f) 
-			{
-				float yaw = std::atan2(agent->vel[0], agent->vel[2]) * (180.0f / Constants::PI);
-				ai->rotPtr->rotation.y = yaw;
-			}
+			float yaw = std::atan2(agent->vel[0], agent->vel[2]) * (180.0f / 3.14159f);
+			rot.rotation.y = yaw;
 		}
 	}
 }

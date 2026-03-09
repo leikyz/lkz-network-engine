@@ -2,6 +2,7 @@
 #include <LKZ/Core/ECS/Manager/ComponentManager.h>
 #include <LKZ/Core/ECS/Manager/EntityManager.h>
 #include <LKZ/Protocol/Message/Gameplay/ChangeWaveMessage.h>
+#include <iostream>
 
 ClientGameSceneLoadedMessage::ClientGameSceneLoadedMessage() {}
 
@@ -25,35 +26,9 @@ void ClientGameSceneLoadedMessage::deserialize(Deserializer& deserializer)
 
 void ClientGameSceneLoadedMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
- //   Client* client = ClientManager::getClientByAddress(senderAddr);
+	std::cout << "scene loader received from client" << std::endl;
+	Session* session = SessionManager::GetSessionBySocket(tcpSocket);
+	session->isInGame = true;
 
-	//Session* session = SessionManager::GetSession(client->lobbyId);
-
- //   if (!client)
- //   {
- //       Logger::Log("ClientGameSceneLoadedMessage: Client not found.", LogType::Warning);
- //       return;
-	//}
-
- //   if (!lobby)
- //   {
- //       Logger::Log("ClientGameSceneLoadedMessage: Lobby not found.", LogType::Warning);
- //       return;
- //   }
-
- //   Serializer serializer;
- //   serialize(serializer);
-
- //   Engine::Instance().Server()->SendToMultiple(LobbyManager::getClientsInLobby(lobby->id), serializer.getBuffer(), getClassName());
-
-	//lobby->gameLoaded = true;
-	//// first wave start
-
- //   ChangeWaveMessage changeWaveMsg(1);
- //   changeWaveMsg.serialize(serializer);
-
- //   Engine::Instance().Server()->SendToMultiple(
- //       LobbyManager::getClientsInLobby(lobby->id),
- //       serializer.getBuffer(),
- //       changeWaveMsg.getClassName());
+ 
 }

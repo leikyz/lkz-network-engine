@@ -48,7 +48,7 @@ struct PlayerInputComponent
 // Component to manage wave-based enemy spawning
 struct WaveComponent 
 {
-    int lobbyId;
+    uint32_t sessionId;
 
 	bool canSpawn = false;
 

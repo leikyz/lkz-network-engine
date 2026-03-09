@@ -28,6 +28,8 @@ struct Session
     Entity sessionManager;
     int nextEntityId = 1;
 
+	bool isInGame = false;
+
     Session(uint32_t sessionId, std::span<const uint32_t> authIds)
         : id(sessionId),
         authorizedClientIds(authIds.begin(), authIds.end()),

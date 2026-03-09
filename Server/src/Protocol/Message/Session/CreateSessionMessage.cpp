@@ -30,5 +30,5 @@ void CreateSessionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSock
 
     Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(EntitySuperType::GameManager), components, session);
     session->sessionManager = entity;
-
+    components.AddComponent(entity, WaveComponent{ session->id });
 }

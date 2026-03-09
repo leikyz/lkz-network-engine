@@ -10,18 +10,19 @@
 #include <LKZ/Utility/Constants.h>
 #include "LKZ/Core/ECS/Manager/NavMeshQueryManager.h"
 #include <DetourCrowd.h>
+#include <iostream>
 
 void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
 {
     for (auto& [entity, waveComponent] : components.waves)
     {
-		Logger::Log("Zombie to spawn " + std::to_string(waveComponent.zombiesAlive), LogType::Debug);
+        Logger::Log("Zombie to spawn " + std::to_string(waveComponent.zombiesAlive), LogType::Debug);
 
-        Session* session = SessionManager::GetSession(waveComponent.lobbyId);
+        Session* session = SessionManager::GetSession(waveComponent.sessionId);
 
-     /*   if (!session || !lobby->inGame) continue;*/
+        if (!session) continue;
 
-        if (session->gameLoaded)
+        if (session->isInGame)
         {
             if (waveComponent.isIntermission)
             {
@@ -32,7 +33,7 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
                     waveComponent.currentWave++;
                     waveComponent.isIntermission = false;
 
-                    int playerCount = lobby->getClientCount();
+                    int playerCount = session->players.size();
                     int baseZombies = 6;
                     float multiplier = 1.15f;
 
@@ -45,7 +46,14 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
                     Serializer s;
                     waveMsg.serialize(s);
-                    Engine::Instance().Server()->SendToMultiple(lobby->clients, s.getBuffer(), waveMsg.getClassName());
+
+                    for (const auto& player : session->players)
+                    {
+                        if (player.isUdpReady)
+                        {
+                            Engine::Instance().Server()->Send(player.udpAddr, s.getBuffer(), waveMsg.getClassName());
+                        }
+                    }
                 }
                 continue;
             }
@@ -53,7 +61,7 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
             if (waveComponent.zombiesToSpawn <= 0 && waveComponent.zombiesAlive <= 0)
             {
                 waveComponent.isIntermission = true;
-                waveComponent.stateTimer = 10.0f; 
+                waveComponent.stateTimer = 10.0f;
                 Logger::Log("Wave Complete! Starting Intermission.", LogType::Info);
                 return;
             }
@@ -66,8 +74,8 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
                     if (waveComponent.spawnTimer <= 0.0f)
                     {
-
-                        SpawnZombie(lobby->id, (int)EntitySuperType::Zombie); 
+                      
+                        SpawnZombie(session->id, (int)EntitySuperType::Zombie);
 
                         waveComponent.zombiesToSpawn--;
                         waveComponent.zombiesAlive++;
@@ -123,6 +131,10 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
                 0.0f
                 });
 
+            auto& aiComp = components.ai[entity];
+            aiComp.posPtr = &components.positions[entity];
+            aiComp.rotPtr = &components.rotations[entity];
+
             dtCrowd* crowd = Engine::Instance().GetWorld().getCrowd();
             if (crowd)
             {
@@ -166,7 +178,8 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
             {
                 if (player.isUdpReady)
                 {
-                    Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), createEntityMsg.getClassName());
+                    std::cout << "zombie spawned" << std::endl;
+                    Engine::Instance().Server()->SendReliable(player.tcpSocket, serializer.getBuffer());
                 }
             }
             });
