@@ -25,13 +25,13 @@ struct Session
     std::vector<uint32_t> authorizedClientIds;
     std::vector<SessionPlayer> players;
 
-    Entity gameWaveEntity;
+    Entity sessionManager;
     int nextEntityId = 1;
 
     Session(uint32_t sessionId, std::span<const uint32_t> authIds)
         : id(sessionId),
         authorizedClientIds(authIds.begin(), authIds.end()),
-        gameWaveEntity(0)
+        sessionManager(0)
     {
         players.reserve(4);
     }
@@ -49,7 +49,7 @@ class SessionManager
 {
 public:
     static void Initialize();
-    static void CreateSession(uint32_t id, std::span<const uint32_t> authorizedIds);
+    static Session* CreateSession(uint32_t id, std::span<const uint32_t> authorizedIds);
     static void RemoveSession(uint32_t sessionId);
 
     static bool JoinSession(uint32_t sessionId, uint32_t clientId, SOCKET tcpSocket);

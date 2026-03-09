@@ -17,11 +17,11 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
     {
 		Logger::Log("Zombie to spawn " + std::to_string(waveComponent.zombiesAlive), LogType::Debug);
 
-        Lobby* lobby = LobbyManager::getLobby(waveComponent.lobbyId);
+        Session* session = SessionManager::GetSession(waveComponent.lobbyId);
 
-        if (!lobby || !lobby->inGame) continue;
+     /*   if (!session || !lobby->inGame) continue;*/
 
-        if (lobby->gameLoaded)
+        if (session->gameLoaded)
         {
             if (waveComponent.isIntermission)
             {
@@ -60,7 +60,7 @@ void WaveSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
             if (waveComponent.zombiesToSpawn > 0)
             {
-                if (waveComponent.zombiesAlive < MAX_ZOMBIES_ON_MAP)
+                if (waveComponent.zombiesAlive < Constants::MAX_ZOMBIE_PER_WAVE)
                 {
                     waveComponent.spawnTimer -= fixedDeltaTime;
 
@@ -102,13 +102,13 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
         CommandQueue::Instance().Push([=]() {
 
             Session* session = SessionManager::GetSession(lobbyId);
-            if (!lobby) return; 
+            if (!session) return;
 
             auto& components = ComponentManager::Instance();
             auto& entityManager = EntityManager::Instance();
             INetworkInterface* server = Engine::Instance().Server();
 
-            Entity entity = entityManager.CreateEntity(EntitySuperType(entitySuperTypeId), components, lobby);
+            Entity entity = entityManager.CreateEntity(EntitySuperType(entitySuperTypeId), components, session);
 
             components.AddComponent(entity, PositionComponent{ randomSpawnPoint });
             components.AddComponent(entity, RotationComponent{ Vector3{ 0.0f, 0.0f, 0.0f } });
@@ -162,11 +162,13 @@ void WaveSystem::SpawnZombie(int lobbyId, int entitySuperTypeId)
             Serializer serializer;
             createEntityMsg.serialize(serializer);
 
-            server->SendToMultiple(
-                LobbyManager::getClientsInLobby(lobby->id),
-                serializer.getBuffer(),
-                createEntityMsg.getClassName()
-            );
+            for (const auto& player : session->players)
+            {
+                if (player.isUdpReady)
+                {
+                    Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), createEntityMsg.getClassName());
+                }
+            }
             });
         });
 }
