@@ -40,8 +40,8 @@ int main()
     world->initialize();
 
     systemManager.RegisterSystem(std::make_shared<PlayerSystem>());
-    systemManager.RegisterSystem(std::make_shared<WaveSystem>());
     systemManager.RegisterSystem(std::make_shared<AISystem>());
+    systemManager.RegisterSystem(std::make_shared<WaveSystem>());
 
     ThreadManager::CreatePool("io", 1);
 

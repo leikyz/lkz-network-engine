@@ -62,7 +62,7 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
 
     if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTickTime).count() >= 1000)
     {
-        Logger::Log("[SERVER TICK] Simulation Frequency: " + std::to_string(tickCount) + " Hz", LogType::Info);
+     /*   Logger::Log("[SERVER TICK] Simulation Frequency: " + std::to_string(tickCount) + " Hz", LogType::Info);*/
 
         // Reset
         tickCount = 0;

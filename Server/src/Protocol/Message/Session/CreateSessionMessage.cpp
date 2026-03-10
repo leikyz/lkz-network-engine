@@ -1,5 +1,6 @@
 #include "LKZ/Protocol/Message/Session/CreateSessionMessage.h"
 #include <iostream>
+#include <LKZ/Core/ECS/Manager/EntityManager.h>
 
 CreateSessionMessage::CreateSessionMessage()
     : token(0), clientsCount(0) 
@@ -24,6 +25,10 @@ void CreateSessionMessage::deserialize(Deserializer& deserializer)
 
 void CreateSessionMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
-    SessionManager::CreateSession(token, clientIds);
+	Session* session = SessionManager::CreateSession(token, clientIds);
+    ComponentManager& components = ComponentManager::Instance();
 
+    Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(EntitySuperType::GameManager), components, session);
+    session->sessionManager = entity;
+    components.AddComponent(entity, WaveComponent{ session->id });
 }

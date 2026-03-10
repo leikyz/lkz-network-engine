@@ -31,7 +31,7 @@ void SessionManager::Initialize()
     m_addrToSession.reserve(Constants::MAX_SESSION * Constants::MAX_PLAYERS_PER_SESSION);
 }
 
-void SessionManager::CreateSession(uint32_t id, std::span<const uint32_t> authorizedIds)
+Session* SessionManager::CreateSession(uint32_t id, std::span<const uint32_t> authorizedIds)
 {
     std::unique_lock lock(m_sessionMutex);
 
@@ -42,6 +42,8 @@ void SessionManager::CreateSession(uint32_t id, std::span<const uint32_t> author
     m_idToSession[id] = sessionPtr;
 
     std::cout << "[SessionManager] Created session " << id << std::endl;
+
+    return sessionPtr;
 }
 
 bool SessionManager::JoinSession(uint32_t sessionId, uint32_t clientId, SOCKET tcpSocket)

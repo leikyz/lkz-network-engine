@@ -53,7 +53,7 @@ void ChangeReadyStatusMessage::process(const sockaddr_in& senderAddr, SOCKET tcp
 
             Entity entity = EntityManager::Instance().CreateEntity(EntitySuperType(EntitySuperType::GameManager), components, lobby);
             lobby->gameWaveEntity = entity;
-            components.AddComponent(entity, WaveComponent{ lobby->id });
+  
         }
 	}*/
 
