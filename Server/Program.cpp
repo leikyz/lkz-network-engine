@@ -13,7 +13,6 @@
 #include <string>
 #include <LKZ/Core/ECS/System/AISystem.h>
 #include <LKZ/Core/ECS/System/PlayerSystem.h>
-#include <LKZ/Core/ECS/System/WaveSystem.h>
 #include <Common/ProfilerProtocol.h>
 
 
@@ -41,7 +40,6 @@ int main()
 
     systemManager.RegisterSystem(std::make_shared<PlayerSystem>());
     systemManager.RegisterSystem(std::make_shared<AISystem>());
-    systemManager.RegisterSystem(std::make_shared<WaveSystem>());
 
     ThreadManager::CreatePool("io", 1);
 

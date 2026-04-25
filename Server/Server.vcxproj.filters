@@ -288,9 +288,6 @@
     <ClCompile Include="src\Protocol\Message\Gameplay\ChangeWaveMessage.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\ECS\System\WaveSystem.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="src\Protocol\Message\Approach\ClientGameSceneLoadedMessage.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -618,9 +615,6 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\LKZ\Protocol\Message\Gameplay\ChangeWaveMessage.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="include\LKZ\Core\ECS\System\WaveSystem.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\LKZ\Protocol\Message\Approach\ClientGameSceneLoadedMessage.h">

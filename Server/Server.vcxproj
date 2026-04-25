@@ -166,7 +166,6 @@
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="src\Core\ECS\Manager\NavMeshQueryManager.cpp" />
     <ClCompile Include="src\Core\ECS\System\AISystem.cpp" />
-    <ClCompile Include="src\Core\ECS\System\WaveSystem.cpp" />
     <ClCompile Include="src\Core\Engine.cpp" />
     <ClCompile Include="src\Core\Server\ProfilerServer.cpp" />
     <ClCompile Include="src\Core\Threading\CommandQueue.cpp" />
@@ -224,7 +223,6 @@
     <ClInclude Include="include\LKZ\Core\ECS\System\ISystem.h" />
     <ClInclude Include="include\LKZ\Core\ECS\System\AISystem.h" />
     <ClInclude Include="include\LKZ\Core\ECS\System\PlayerSystem.h" />
-    <ClInclude Include="include\LKZ\Core\ECS\System\WaveSystem.h" />
     <ClInclude Include="include\LKZ\Core\Engine.h" />
     <ClInclude Include="include\LKZ\Core\Server\ProfilerServer.h" />
     <ClInclude Include="include\LKZ\Core\Threading\CommandQueue.h" />
