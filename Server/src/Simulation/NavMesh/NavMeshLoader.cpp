@@ -107,12 +107,16 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
         Logger::Log("BuildNavMesh Error: No vertex or index data loaded.", LogType::Error);
         return nullptr;
     }
-    float yOffset = -0.5f;
+
+    // Apply a slight negative offset to compensate for voxelization height
+    // Tweak this value (-0.05f to -0.1f) until the feet touch the floor perfectly on the client.
+    float yOffset = -0.1f;
+
     std::vector<float> verts(m_vertices.size() * 3);
     for (size_t i = 0; i < m_vertices.size(); ++i)
     {
         verts[i * 3 + 0] = m_vertices[i].x;
-        verts[i * 3 + 1] = m_vertices[i].y /*+ yOffset*/;
+        verts[i * 3 + 1] = m_vertices[i].y + yOffset;
         verts[i * 3 + 2] = m_vertices[i].z;
     }
 
@@ -125,28 +129,27 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     rcCalcBounds(verts.data(), nverts, cfg.bmin, cfg.bmax);
 
     cfg.cs = 0.10f;
-    cfg.ch = 0.05f;
+    cfg.ch = 0.02f;
 
-	float agentHeight = Constants::AGENT_HEIGHT;
-	float agentRadius = Constants::AGENT_RADIUS;
-
-	float agentMaxClimb = Constants::AGENT_MAX_CLIMB;
-	float agentMaxSlope = Constants::AGENT_MAX_SLOPE;   
+    float agentHeight = Constants::AGENT_HEIGHT;
+    float agentRadius = Constants::AGENT_RADIUS;
+    float agentMaxClimb = Constants::AGENT_MAX_CLIMB;
+    float agentMaxSlope = Constants::AGENT_MAX_SLOPE;
 
     cfg.walkableSlopeAngle = agentMaxSlope;
     cfg.walkableHeight = (int)ceilf(agentHeight / cfg.ch);
     cfg.walkableClimb = (int)floorf(agentMaxClimb / cfg.ch);
- /*   cfg.walkableRadius = (int)ceilf(agentRadius / cfg.cs); */
     cfg.walkableRadius = 0;
     cfg.maxEdgeLen = (int)(12.0f / cfg.cs);
     cfg.maxSimplificationError = 1.3f;
- /*   cfg.minRegionArea = (int)(8.0f / (cfg.cs * cfg.cs));*/
     cfg.minRegionArea = 0;
     cfg.mergeRegionArea = (int)(20.0f / (cfg.cs * cfg.cs));
     cfg.maxVertsPerPoly = 6;
-    cfg.detailSampleDist = 6.0f;
-    cfg.detailSampleMaxError = 1.0f;
-    cfg.tileSize = 0; 
+
+    cfg.detailSampleDist = 2.0f;
+    cfg.detailSampleMaxError = 0.02f;
+
+    cfg.tileSize = 0;
 
     rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
     Logger::Log(std::format("[NavMesh] Grid Size: {} x {}", cfg.width, cfg.height), LogType::Info);
@@ -185,10 +188,6 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     }
     rcFreeHeightField(solid);
 
-    //if (!rcErodeWalkableArea(&ctx, cfg.walkableRadius, *chf))
-    //{
-    //    Logger::Log("BuildNavMesh Error: Could not erode.", LogType::Error); rcFreeCompactHeightfield(chf); return nullptr;
-    //}
     if (!rcBuildDistanceField(&ctx, *chf))
     {
         Logger::Log("BuildNavMesh Error: Could not build distance field.", LogType::Error); rcFreeCompactHeightfield(chf); return nullptr;
@@ -243,7 +242,6 @@ dtNavMesh* NavMeshLoader::BuildNavMesh()
     else
     {
         Logger::Log(std::format("[NavMesh Success] Generated {} polygons...", pmesh->npolys), LogType::Info);
-
         savePolyMeshToOBJ(pmesh, "server_navmesh_debug.obj");
     }
 
