@@ -543,14 +543,24 @@ void WindowsServer::Poll()
                 }
 
                 // Extract the full packet (header + payload) into a temporary container
-                // Your EventManager expects the full data span starting with the size header
                 std::vector<uint8_t> packet(
                     ioData->pendingData.begin() + readPos,
                     ioData->pendingData.begin() + readPos + msgSize
                 );
 
-                // Dispatch the reliable message for logic processing
-                EventManager::processMessage(packet, ioData->clientAddr, true, ioData->socket);
+                // --- PING INTERCEPT (Bypass the EventManager and Game Queue) ---
+                // Index 0 and 1 are the Size header. Index 2 is the Message ID.
+                if (packet.size() >= 3 && packet[2] == 32)
+                {
+                    // It is a Ping! Send the exact same raw packet back to the client immediately.
+                    SendReliable(ioData->socket, packet);
+                }
+                else
+                {
+                    // Dispatch all other messages for normal logic processing
+                    EventManager::processMessage(packet, ioData->clientAddr, true, ioData->socket);
+                }
+                // ---------------------------------------------------------------
 
                 // Advance the cursor past the processed message
                 readPos += msgSize;
