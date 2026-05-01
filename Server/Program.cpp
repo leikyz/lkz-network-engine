@@ -14,6 +14,7 @@
 #include <LKZ/Core/ECS/System/AISystem.h>
 #include <LKZ/Core/ECS/System/PlayerSystem.h>
 #include <Common/ProfilerProtocol.h>
+#include <LKZ/Core/Manager/MetricsManager.h>
 
 
 
@@ -55,15 +56,25 @@ int main()
 
     ThreadManager::CreatePool("simulation", 1, [&](float)
         {
+            // Record the start time
+            auto startTime = std::chrono::high_resolution_clock::now();
+
             auto& engine = Engine::Instance();
             auto& components = ComponentManager::Instance();
 
             CommandQueue::Instance().ProcessAllCommands();
-          
+
             if (world)
                 world->UpdateCrowd(Constants::FIXED_DELTA_TIME);
 
             systemManager.Update(components, Constants::FIXED_DELTA_TIME);
+
+            auto endTime = std::chrono::high_resolution_clock::now();
+
+            // Calculate the duration in microseconds
+            auto durationUs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+
+            MetricsManager::Instance().currentMetrics.simulationTickTimeUs.store(durationUs);
 
         }, true);
 

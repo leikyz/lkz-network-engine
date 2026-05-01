@@ -1,4 +1,5 @@
 #include "LKZ/Core/ECS/Manager/EntityManager.h"
+#include <LKZ/Core/Manager/MetricsManager.h>
 #include "LKZ/Core/ECS/Component/Component.h."
 #include <iostream>
 
@@ -20,7 +21,7 @@ Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& compo
 
 void EntityManager::DestroyEntity(Entity entity)
 {
-
+    MetricsManager::Instance().currentMetrics.activeEntityCount--;
     m_freeIDs.push(entity);
     m_entitySessionMap.erase(entity);
 }

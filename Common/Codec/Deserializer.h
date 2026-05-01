@@ -14,7 +14,6 @@ private:
     size_t m_position = 0;
 
 public:
-
     explicit Deserializer(std::span<const uint8_t> buf)
         : m_buffer(buf) {
     }
@@ -43,6 +42,33 @@ public:
             (static_cast<uint32_t>(m_buffer[m_position + 3]));
 
         m_position += 4;
+        return value;
+    }
+
+    // Read a signed int (8 bytes) big endian
+    int64_t readInt64()
+    {
+        return static_cast<int64_t>(readUInt64());
+    }
+
+    // Read an unsigned int (8 bytes) big endian
+    uint64_t readUInt64()
+    {
+        if (m_position + 8 > m_buffer.size()) {
+            throw std::out_of_range("Buffer overflow in readUInt64");
+        }
+
+        uint64_t value =
+            (static_cast<uint64_t>(m_buffer[m_position]) << 56) |
+            (static_cast<uint64_t>(m_buffer[m_position + 1]) << 48) |
+            (static_cast<uint64_t>(m_buffer[m_position + 2]) << 40) |
+            (static_cast<uint64_t>(m_buffer[m_position + 3]) << 32) |
+            (static_cast<uint64_t>(m_buffer[m_position + 4]) << 24) |
+            (static_cast<uint64_t>(m_buffer[m_position + 5]) << 16) |
+            (static_cast<uint64_t>(m_buffer[m_position + 6]) << 8) |
+            (static_cast<uint64_t>(m_buffer[m_position + 7]));
+
+        m_position += 8;
         return value;
     }
 

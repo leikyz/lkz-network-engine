@@ -2,6 +2,7 @@
 #include <iostream>
 #include <LKZ/Core/Manager/EventManager.h>
 #include <iomanip>
+#include <LKZ/Core/Manager/MetricsManager.h>
 
 WindowsServer::WindowsServer(int port)
     : port(port) {
@@ -408,9 +409,20 @@ void WindowsServer::Poll()
     // If overlapped is null, it means an unrecoverable error occurred in the IOCP itself
     if (!overlapped) return;
 
-    // Magic Macro: Retrieve the pointer to the base structure by calculating 
-    // the offset of the 'overlapped' member within the BaseIo struct
     BaseIo* base = CONTAINING_RECORD(overlapped, BaseIo, overlapped);
+
+    if (success && bytesTransferred > 0)
+    {
+        if (base->opType == IO_OPERATION::SEND_TCP || base->opType == IO_OPERATION::SEND_UDP) {
+            MetricsManager::Instance().currentMetrics.networkBytesSent.fetch_add(bytesTransferred, std::memory_order_relaxed);
+        }
+        else if (base->opType == IO_OPERATION::RECEIVE_TCP || base->opType == IO_OPERATION::RECEIVE_UDP) {
+            MetricsManager::Instance().currentMetrics.networkBytesReceived.fetch_add(bytesTransferred, std::memory_order_relaxed);
+        }
+
+        MetricsManager::Instance().currentMetrics.messagesPerSecond++;
+    }
+
 
     switch (base->opType)
     {

@@ -41,6 +41,25 @@ public:
         m_buffer.push_back(static_cast<uint8_t>(value & 0xFF));
     }
 
+    // Writes a signed integer (8 bytes) in big endian
+    void writeInt64(int64_t value)
+    {
+        writeUInt64(static_cast<uint64_t>(value));
+    }
+
+    // Writes an unsigned integer (8 bytes) in big endian
+    void writeUInt64(uint64_t value)
+    {
+        m_buffer.push_back(static_cast<uint8_t>((value >> 56) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 48) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 40) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 32) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
+        m_buffer.push_back(static_cast<uint8_t>(value & 0xFF));
+    }
+
     // Writes a float (4 bytes) in big endian (IEEE 754 assumed)
     void writeFloat(float value)
     {

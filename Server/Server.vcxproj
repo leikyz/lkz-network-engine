@@ -164,6 +164,7 @@
     <ClCompile Include="lib\RecastNavigation\Recast\Source\RecastRasterization.cpp" />
     <ClCompile Include="lib\RecastNavigation\Recast\Source\RecastRegion.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="src\Core\ECS\Manager\MetricsManager.cpp" />
     <ClCompile Include="src\Core\ECS\Manager\NavMeshQueryManager.cpp" />
     <ClCompile Include="src\Core\ECS\System\AISystem.cpp" />
     <ClCompile Include="src\Core\Engine.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="src\Protocol\Message\Entity\Zombie\ZombieBoneSeveredMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Entity\Zombie\ZombieHitMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Gameplay\ChangeWaveMessage.cpp" />
+    <ClCompile Include="src\Protocol\Message\Profiler\PingMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Profiler\ProfilerClientCreatedMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Profiler\ProfilerNetworkPerformanceMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Session\CreateSessionMessage.cpp" />
@@ -224,6 +226,7 @@
     <ClInclude Include="include\LKZ\Core\ECS\System\AISystem.h" />
     <ClInclude Include="include\LKZ\Core\ECS\System\PlayerSystem.h" />
     <ClInclude Include="include\LKZ\Core\Engine.h" />
+    <ClInclude Include="include\LKZ\Core\Manager\MetricsManager.h" />
     <ClInclude Include="include\LKZ\Core\Server\ProfilerServer.h" />
     <ClInclude Include="include\LKZ\Core\Threading\CommandQueue.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Approach\ClientGameSceneLoadedMessage.h" />
@@ -238,10 +241,12 @@
     <ClInclude Include="include\LKZ\Protocol\Message\Entity\Zombie\ZombieBoneSeveredMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Entity\Zombie\ZombieHitMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Gameplay\ChangeWaveMessage.h" />
+    <ClInclude Include="include\LKZ\Protocol\Message\Profiler\PingMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Profiler\ProfilerClientCreatedMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Profiler\ProfilerNetworkPerformanceMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Session\CreateSessionMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Session\JoinSessionMessage.h" />
+    <ClInclude Include="include\LKZ\Protocol\Message\Telemetry\ServerMetricsMessage.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\MathUtils.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\Quaternion.h" />
     <ClInclude Include="include\LKZ\Simulation\Math\Vector.h" />

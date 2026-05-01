@@ -15,6 +15,7 @@
 #include <DetourCrowd.h>
 #include "LKZ/Simulation/Math/Vector.h" 
 #include <iostream>
+#include <LKZ/Core/Manager/MetricsManager.h>
 
 RequestCreateEntityMessage::RequestCreateEntityMessage() {}
 
@@ -156,6 +157,8 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                 Constants::SECOND_ZOMBIE_SPAWN_POSITION,
                 Constants::THIRD_ZOMBIE_SPAWN_POSITION
             };
+
+			MetricsManager::Instance().currentMetrics.activeEntityCount++; // Reset pathfinding time metric before starting
 
             // Randomly select one of the three spawn positions
             Vector3 selectedSpawn = spawnPoints[rand() % 3];
