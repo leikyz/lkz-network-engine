@@ -1,6 +1,8 @@
 #include "LKZ/Core/Manager/MetricsManager.h"
-#include "LKZ/Core/Server/WindowsServer.h" // Update this path if necessary
+#include "LKZ/Core/Server/WindowsServer.h" 
+#include "LKZ/Core/Manager/SessionManager.h"
 #include <iostream>
+#include <LKZ/Protocol/Message/Telemetry/ServerMetricsMessage.h>
 
 MetricsManager& MetricsManager::Instance()
 {
@@ -23,24 +25,48 @@ void MetricsManager::TryBroadcastMetrics(WindowsServer* server)
 
 void MetricsManager::Broadcast(WindowsServer* server)
 {
-    // 1. Read the atomic variables safely using .load()
+    if (!server) return;
+
+    // Extract and instantly reset the accumulators for the next second
+    uint64_t bytesSentThisSec = currentMetrics.networkBytesSent.exchange(0, std::memory_order_relaxed);
+    uint64_t bytesRecvThisSec = currentMetrics.networkBytesReceived.exchange(0, std::memory_order_relaxed);
+    uint64_t ppsThisSec = currentMetrics.packetsPerSecond.exchange(0, std::memory_order_relaxed);
+
+    // Read the standard variables
     long long simTime = currentMetrics.simulationTickTimeUs.load();
     int entityCount = currentMetrics.activeEntityCount.load();
-    int bytesSent = currentMetrics.networkBytesSent.load();
 
-    // 2. Here is where you format this data into your specific network packet
-    // auto packet = ProfilerProtocol::CreateMetricsPacket(simTime, pathTime, entityCount, bytesSent);
+    // Populate the Message
+    ServerMetricsMessage msg;
+    msg.simulationTickTimeUs = simTime;
+    msg.activeEntityCount = entityCount;
+    msg.txKbps = bytesSentThisSec / 1024; // Send as KB/s
+    msg.rxKbps = bytesRecvThisSec / 1024; // Send as KB/s
+    msg.packetsPerSecond = ppsThisSec;
 
-    // 3. Send the packet to the clients
-    /*
-    if (server)
+    Serializer serializer;
+    msg.serialize(serializer);
+    const auto& buffer = serializer.getBuffer();
+
+    std::vector<Session*> allSessions = SessionManager::GetAllSessions();
+    for (Session* session : allSessions)
     {
-        server->BroadcastToAll(packet);
-    }
-    */
+        if (!session) continue;
 
-    // Console output for debugging
-   /* std::cout << "[Metrics] 1-Second Update -> Sim: " << simTime
-        << "us | Path: " << pathTime
-        << "us | Entities: " << entityCount << "\n";*/
+        for (const SessionPlayer& player : session->players)
+        {
+            if (player.tcpSocket != INVALID_SOCKET)
+            {
+                server->SendReliable(player.tcpSocket, buffer);
+            }
+        }
+    }
+
+    // Console output for debugging (optional)
+    /*
+    std::cout << "[Metrics] 1-Second Update -> Sim: " << simTime
+        << "us | Entities: " << entityCount
+        << " | TX: " << msg.txKbps << " KB/s | RX: " << msg.rxKbps
+        << " KB/s | PPS: " << msg.packetsPerSecond << "\n";
+    */
 }

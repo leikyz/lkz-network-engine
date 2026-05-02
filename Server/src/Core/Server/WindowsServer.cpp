@@ -420,7 +420,7 @@ void WindowsServer::Poll()
             MetricsManager::Instance().currentMetrics.networkBytesReceived.fetch_add(bytesTransferred, std::memory_order_relaxed);
         }
 
-        MetricsManager::Instance().currentMetrics.messagesPerSecond++;
+        MetricsManager::Instance().currentMetrics.packetsPerSecond++;
     }
 
 

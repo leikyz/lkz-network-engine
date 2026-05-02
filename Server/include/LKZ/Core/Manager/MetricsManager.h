@@ -12,7 +12,7 @@ struct ServerMetrics
     std::atomic<long long> simulationTickTimeUs{ 0 };
     std::atomic<int> activeEntityCount{ 0 };
     std::atomic<uint64_t> networkBytesSent{ 0 };
-    std::atomic<uint64_t> messagesPerSecond{ 0 };
+    std::atomic<uint64_t> packetsPerSecond{ 0 };
     std::atomic<uint64_t> networkBytesReceived{ 0 };
 };
 

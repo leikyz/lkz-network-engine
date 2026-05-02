@@ -31,6 +31,22 @@ void SessionManager::Initialize()
     m_addrToSession.reserve(Constants::MAX_SESSION * Constants::MAX_PLAYERS_PER_SESSION);
 }
 
+std::vector<Session*> SessionManager::GetAllSessions()
+{
+    // Safely lock the sessions map for reading
+    std::shared_lock<std::shared_mutex> lock(m_sessionMutex);
+
+    std::vector<Session*> sessions;
+    sessions.reserve(m_sessions.size());
+
+    for (const auto& sessionPtr : m_sessions)
+    {
+        sessions.push_back(sessionPtr.get());
+    }
+
+    return sessions;
+}
+
 Session* SessionManager::CreateSession(uint32_t id, std::span<const uint32_t> authorizedIds)
 {
     std::unique_lock lock(m_sessionMutex);

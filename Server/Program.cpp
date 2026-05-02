@@ -16,8 +16,6 @@
 #include <Common/ProfilerProtocol.h>
 #include <LKZ/Core/Manager/MetricsManager.h>
 
-
-
 int main()
 {
 #ifdef _WIN32
@@ -51,7 +49,16 @@ int main()
                 server->Poll();
             }
         });
-    ThreadManager::CreatePool("profiler", 1, [&](float) { engine.GetProfiler()->Poll(); }, true);
+
+    ThreadManager::CreatePool("profiler", 1, [&](float)
+        {
+            engine.GetProfiler()->Poll();
+
+            // This is called constantly, but the internal 1-second check inside 
+            MetricsManager::Instance().TryBroadcastMetrics(server);
+
+        }, true);
+
     ThreadManager::CreatePool("pathfinding", 4);
 
     ThreadManager::CreatePool("simulation", 1, [&](float)
@@ -78,9 +85,8 @@ int main()
 
         }, true);
 
-
     engine.Run();
-    
+
     ThreadManager::StopAll();
     delete world;
     delete server;

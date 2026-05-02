@@ -33,6 +33,7 @@
 #include <LKZ/Protocol/Message/Session/CreateSessionMessage.h>
 #include <LKZ/Protocol/Message/Session/JoinSessionMessage.h>
 #include <LKZ/Protocol/Message/Profiler/PingMessage.h>
+#include <LKZ/Protocol/Message/Telemetry/ServerMetricsMessage.h>
 
 EventManager::MessageHandler EventManager::messageHandlers[256] = { nullptr };
 
@@ -67,6 +68,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<JoinSessionMessage>(28);
     EventManager::registerHandler<HandshakeUDPMessage>(30);
     EventManager::registerHandler<PingMessage>(32);
+	EventManager::registerHandler<ServerMetricsMessage>(33);
 }
 
 template<typename T>

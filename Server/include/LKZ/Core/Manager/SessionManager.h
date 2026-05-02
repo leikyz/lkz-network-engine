@@ -63,6 +63,7 @@ public:
 
     static void RemoveClientFromSession(uint32_t sessionId, uint32_t clientId);
     static size_t GetSessionCount();
+    static std::vector<Session*> GetAllSessions();
 
 private:
     static std::vector<std::unique_ptr<Session>> m_sessions;

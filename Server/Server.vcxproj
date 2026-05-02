@@ -187,6 +187,7 @@
     <ClCompile Include="src\Protocol\Message\Profiler\ProfilerNetworkPerformanceMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Session\CreateSessionMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Session\JoinSessionMessage.cpp" />
+    <ClCompile Include="src\Protocol\Message\Telemetry\ServerMetricsMessage.cpp" />
     <ClCompile Include="src\Simulation\Math\MathUtils.cpp" />
     <ClCompile Include="src\Simulation\NavMesh\NavMeshLoader.cpp" />
     <ClCompile Include="src\Simulation\World.cpp">
