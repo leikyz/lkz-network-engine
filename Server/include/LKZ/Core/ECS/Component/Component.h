@@ -11,6 +11,7 @@ enum class EntitySuperType : uint8_t
     GameManager = 0,
     Player = 1,
     Zombie = 2,
+    Primitive = 3
 };
 
 enum class EntityType : uint8_t
@@ -19,7 +20,10 @@ enum class EntityType : uint8_t
     PlayerSynced1 = 2,
     ZombieBase1 = 3,
     ZombieBase2 = 4,
-	ZombieBase3 = 5
+	ZombieBase3 = 5,
+    Primitive1 = 6,
+	Privitive2 = 7,
+	Primitive3 = 8,
 };
 
 // Plyer input data structure

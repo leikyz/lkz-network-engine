@@ -34,6 +34,7 @@
 #include <LKZ/Protocol/Message/Session/JoinSessionMessage.h>
 #include <LKZ/Protocol/Message/Profiler/PingMessage.h>
 #include <LKZ/Protocol/Message/Telemetry/ServerMetricsMessage.h>
+#include <LKZ/Protocol/Message/Entity/DeleteAllEntitiesMessage.h>
 
 EventManager::MessageHandler EventManager::messageHandlers[256] = { nullptr };
 
@@ -69,6 +70,7 @@ void EventManager::BindEvents()
     EventManager::registerHandler<HandshakeUDPMessage>(30);
     EventManager::registerHandler<PingMessage>(32);
 	EventManager::registerHandler<ServerMetricsMessage>(33);
+    EventManager::registerHandler<DeleteAllEntitiesMessage>(34);
 }
 
 template<typename T>

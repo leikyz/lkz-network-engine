@@ -9,9 +9,10 @@ struct RequestCreateEntityMessage : public Message
 
     RequestCreateEntityMessage();
 
-    RequestCreateEntityMessage(int entityTypeId);
+    RequestCreateEntityMessage(int entityTypeId, uint16_t number = 0);
 
     uint8_t entitySuperTypeId;
+    uint16_t number;
 
     uint8_t getId() const override;
 
@@ -20,4 +21,4 @@ struct RequestCreateEntityMessage : public Message
     void process(const sockaddr_in& senderAddr, SOCKET tcpSocket) override;
 };
 
-#endif // CREATE_ENTITY_MESSAGE_H
+#endif // REQUEST_CREATE_ENTITY_MESSAGE_H

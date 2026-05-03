@@ -2,7 +2,6 @@
 #include <LKZ/Core/Manager/MetricsManager.h>
 #include "LKZ/Core/ECS/Component/Component.h."
 #include <iostream>
-
 Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& components, Session* session)
 {
     Entity id;
@@ -15,8 +14,35 @@ Entity EntityManager::CreateEntity(EntitySuperType type, ComponentManager& compo
     }
 
     m_entitySessionMap[id] = session;
+    m_entityTypeMap[id] = type;
 
     return id;
+}
+void EntityManager::DestroyEntitiesBySession(Session* session)
+{
+    if (!session) return;
+
+    // Collect IDs first to avoid iterator invalidation while erasing
+    std::vector<Entity> targets;
+
+    for (auto const& [entity, mappedSession] : m_entitySessionMap)
+    {
+        if (mappedSession == session)
+        {
+            EntitySuperType type = m_entityTypeMap[entity];
+            // Filter for Zombie (2) or Primitive (3)
+            if (type == EntitySuperType::Zombie || type == EntitySuperType::Primitive)
+            {
+                targets.push_back(entity);
+            }
+        }
+    }
+
+    // Use the existing DestroyEntity logic for each target
+    for (Entity entity : targets)
+    {
+        DestroyEntity(entity);
+    }
 }
 
 void EntityManager::DestroyEntity(Entity entity)
@@ -24,6 +50,8 @@ void EntityManager::DestroyEntity(Entity entity)
     MetricsManager::Instance().currentMetrics.activeEntityCount--;
     m_freeIDs.push(entity);
     m_entitySessionMap.erase(entity);
+    m_entityTypeMap.erase(entity); 
+    m_lastSequenceIds.erase(entity); 
 }
 
 Entity EntityManager::GetEntityById(uint16_t entityId, Session* lobby)

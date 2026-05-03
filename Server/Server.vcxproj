@@ -172,6 +172,7 @@
     <ClCompile Include="src\Core\Threading\CommandQueue.cpp" />
     <ClCompile Include="src\Protocol\Message\Approach\ClientGameSceneLoadedMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Approach\HandshakeUDPMessage.cpp" />
+    <ClCompile Include="src\Protocol\Message\Entity\DeleteAllEntitiesMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Entity\EntityDeadMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Entity\Player\PlayerAimTargetPositionMessage.cpp" />
     <ClCompile Include="src\Protocol\Message\Entity\Player\PlayerInputMessage.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="include\LKZ\Core\Threading\CommandQueue.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Approach\ClientGameSceneLoadedMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Approach\HandshakeUDPMessage.h" />
+    <ClInclude Include="include\LKZ\Protocol\Message\Entity\DeleteAllEntitiesMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Entity\Player\PlayerAimTargetPositionMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Entity\Player\PlayerInputMessage.h" />
     <ClInclude Include="include\LKZ\Protocol\Message\Entity\MoveEntitiesMessage.h" />

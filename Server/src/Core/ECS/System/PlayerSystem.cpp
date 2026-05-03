@@ -90,9 +90,9 @@ void PlayerSystem::Update(ComponentManager& components, float fixedDeltaTime)
             }
         }
 
-        if (inputComp.inputQueue.size() > 1) {
+        /*if (inputComp.inputQueue.size() > 1) {
             Logger::Log("Accumulation détectée : " + std::to_string(inputComp.inputQueue.size()) + " inputs", LogType::Warning);
-        }
+        }*/
 
         if (!ownerPlayer || !ownerPlayer->isUdpReady) continue;
 

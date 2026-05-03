@@ -27,6 +27,8 @@ public:
 
     Session* GetSessionByEntity(Entity entity);
 
+    void DestroyEntitiesBySession(Session* session);
+
     Entity GetEntityById(uint16_t entityId, Session* lobby);
 
 private:
@@ -45,7 +47,8 @@ private:
 	// Queue to manage reusable entity IDs
     std::queue<Entity> m_freeIDs;
 
-	// Map to associate entities with their respective lobbies
+	// Map to associate entities with their respective session
     std::unordered_map<Entity, Session*> m_entitySessionMap;
+    std::unordered_map<Entity, EntitySuperType> m_entityTypeMap;
 };
 

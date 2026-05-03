@@ -318,6 +318,9 @@
     <ClCompile Include="src\Protocol\Message\Telemetry\ServerMetricsMessage.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\Protocol\Message\Entity\DeleteAllEntitiesMessage.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Protocol\Message\Message.h">
@@ -654,6 +657,9 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\LKZ\Protocol\Message\Profiler\PingMessage.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LKZ\Protocol\Message\Entity\DeleteAllEntitiesMessage.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
