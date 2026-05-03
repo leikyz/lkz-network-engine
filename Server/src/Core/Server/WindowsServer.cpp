@@ -135,11 +135,9 @@ void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> b
 {
     if (clientSocket == INVALID_SOCKET) return;
 
-    // 1. On récupère un buffer du pool (tu peux créer un pool dédié au TCP ou réutiliser l'existant)
-    // Ici, pour l'exemple, on en crée un ou on en prend un d'un pool "sendTCPPool"
     SendTCPIoData* io = nullptr;
     {
-        std::lock_guard<std::mutex> lock(sendPoolMutex); // Utilise un mutex pour le pool
+        std::lock_guard<std::mutex> lock(sendPoolMutex);
         if (!availableTCPSends.empty()) {
             io = availableTCPSends.front();
             availableTCPSends.pop();
@@ -151,7 +149,6 @@ void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> b
         return;
     }
 
-    // 2. Préparation des données
     size_t copySize = (std::min)(buffer.size(), io->data.size());
     memcpy(io->data.data(), buffer.data(), copySize);
 
@@ -160,7 +157,6 @@ void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> b
     io->socket = clientSocket;
     io->ResetOverlapped();
 
-    // 3. Appel asynchrone spécifique au TCP
     int ret = WSASend(
         io->socket,
         &io->wsabuf,
@@ -175,7 +171,6 @@ void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> b
         int err = WSAGetLastError();
         if (err != WSA_IO_PENDING) {
             std::cerr << "[TCP] WSASend failed: " << err << "\n";
-            // Retour au pool immédiat en cas d'erreur fatale
             std::lock_guard<std::mutex> lock(sendPoolMutex);
             availableTCPSends.push(io);
         }
