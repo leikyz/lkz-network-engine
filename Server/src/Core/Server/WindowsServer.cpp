@@ -170,7 +170,7 @@ void WindowsServer::SendReliable(SOCKET clientSocket, std::span<const uint8_t> b
     if (ret == SOCKET_ERROR) {
         int err = WSAGetLastError();
         if (err != WSA_IO_PENDING) {
-            std::cerr << "[TCP] WSASend failed: " << err << "\n";
+           /* std::cerr << "[TCP] WSASend failed: " << err << "\n";*/
             std::lock_guard<std::mutex> lock(sendPoolMutex);
             availableTCPSends.push(io);
         }

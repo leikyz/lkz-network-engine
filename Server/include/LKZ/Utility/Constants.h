@@ -42,7 +42,7 @@ namespace Constants
     inline constexpr float AGENT_MAX_CLIMB = 1.5f;
     inline constexpr float AGENT_MAX_SLOPE = 45.0f; // in degrees
     inline constexpr float AGENT_MAX_ACCELERATION = 100.0f; // Maximum acceleration allowed for an agent.
-    inline constexpr float AGENT_MAX_SPEED = 2.5f;       // Maximum movement speed of an agent (units per second).
+    inline constexpr float AGENT_MAX_SPEED = 3.0f;       // Maximum movement speed of an agent (units per second).
 
     // ----- Avoidance & Collision -----
 
@@ -81,17 +81,17 @@ namespace Constants
 	inline constexpr float AI_STOP_DISTANCE = 2.0f; // Distance at which AI stops moving towards target.
 	inline constexpr float AI_STOP_DISTANCE_SQ = AI_STOP_DISTANCE * AI_STOP_DISTANCE; // Squared stop distance for efficiency.
 
-	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 500.0, 4.0, 390.0 }; // Default spawn position for the first player.
-	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { 500.0, 4.0, 390.0 }; // Default spawn position for the second player.
-	inline constexpr Vector3 THIRD_PLAYER_SPAWN_POSITION = { 500.0, 4.0, 390.0 }; // Default spawn position for the third player.
-	inline constexpr Vector3 FOURTH_PLAYER_SPAWN_POSITION = { 500.0, 4.0, 390.0 }; // Default spawn position for the fourth player
+	inline constexpr Vector3 FIRST_PLAYER_SPAWN_POSITION = { 491.65, 4.0, 380.71 }; // Default spawn position for the first player.
+	inline constexpr Vector3 SECOND_PLAYER_SPAWN_POSITION = { 495.54, 4.0, 374.56 }; // Default spawn position for the second player.
+	inline constexpr Vector3 THIRD_PLAYER_SPAWN_POSITION = { 491.08, 4.0, 372.81 }; // Default spawn position for the third player.
+	inline constexpr Vector3 FOURTH_PLAYER_SPAWN_POSITION = { 485.18, 4.0, 376.22 }; // Default spawn position for the fourth player
 
     inline constexpr Vector3 ZOMBIE_TARGET_POSITION = { 0.24f, 0.0f, 7.06f };
     
-    inline constexpr Vector3 FIRST_ZOMBIE_SPAWN_POSITION = { 495.0f, 0.0f, 387.0f }; // Default spawn position for the fourth player..
-    inline constexpr Vector3 SECOND_ZOMBIE_SPAWN_POSITION = { 131.0f, 20.0, 277.0f };
-    inline constexpr Vector3 THIRD_ZOMBIE_SPAWN_POSITION = { 131.0f, 20.0, 277.0f };
-    inline constexpr Vector3 FOURTH_ZOMBIE_SPAWN_POSITION = { 131.0f, 20.0, 277.0f };
+    inline constexpr Vector3 FIRST_ZOMBIE_SPAWN_POSITION = { 481.73f, 0.0f, 393.11f }; // Default spawn position for the fourth player..
+    inline constexpr Vector3 SECOND_ZOMBIE_SPAWN_POSITION = { 481.73f, 20.0, 390.2f };
+    inline constexpr Vector3 THIRD_ZOMBIE_SPAWN_POSITION = { 483.98f, 20.0, 390.2f };
+    inline constexpr Vector3 FOURTH_ZOMBIE_SPAWN_POSITION = { 483.98f, 20.0, 394.75f };
 }
 
 #endif // CONSTANTS_HPP

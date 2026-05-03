@@ -160,7 +160,8 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                 Vector3 spawnPoints[] = {
                     Constants::FIRST_ZOMBIE_SPAWN_POSITION,
                     Constants::SECOND_ZOMBIE_SPAWN_POSITION,
-                    Constants::THIRD_ZOMBIE_SPAWN_POSITION
+                    Constants::THIRD_ZOMBIE_SPAWN_POSITION,
+					Constants::FOURTH_ZOMBIE_SPAWN_POSITION
                 };
 
                 MetricsManager::Instance().currentMetrics.activeEntityCount++; // Reset pathfinding time metric before starting
