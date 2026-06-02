@@ -25,6 +25,14 @@ void DeleteAllEntitiesMessage::process(const sockaddr_in& senderAddr, SOCKET tcp
 {
     Session* session = SessionManager::GetSessionBySocket(tcpSocket);
 
+    Serializer serializer;
+    serialize(serializer);
+
+    for (const auto& player : session->players)
+    {
+        Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), getClassName());
+    }
+
     if (session != nullptr)
     {
         // Batch destroy all Zombies (2) and Primitives (3) for this session

@@ -36,14 +36,14 @@ std::vector<uint8_t>& RequestCreateEntityMessage::serialize(Serializer& serializ
 {
     serializer.reset();
     serializer.writeByte(entitySuperTypeId);
-    serializer.writeUInt16(number); 
+    serializer.writeUInt16(number);
     return serializer.getBuffer();
 }
 
 void RequestCreateEntityMessage::deserialize(Deserializer& deserializer)
 {
     entitySuperTypeId = deserializer.readByte();
-    number = deserializer.readUInt16(); 
+    number = deserializer.readUInt16();
 }
 
 void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
@@ -161,19 +161,28 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                     Constants::FIRST_ZOMBIE_SPAWN_POSITION,
                     Constants::SECOND_ZOMBIE_SPAWN_POSITION,
                     Constants::THIRD_ZOMBIE_SPAWN_POSITION,
-					Constants::FOURTH_ZOMBIE_SPAWN_POSITION
+                    Constants::FOURTH_ZOMBIE_SPAWN_POSITION
                 };
 
-                MetricsManager::Instance().currentMetrics.activeEntityCount++; // Reset pathfinding time metric before starting
+                MetricsManager::Instance().currentMetrics.activeEntityCount++;
 
-                // Randomly select one of the three spawn positions
-                Vector3 selectedSpawn = spawnPoints[rand() % 3];
+                // Randomly select one of the four spawn positions
+                Vector3 selectedSpawn = spawnPoints[rand() % 4];
 
-                // Ensure the selected point is snapped correctly to the NavMesh
-                float polyPickExt[3] = { 2.0f, 4.0f, 2.0f };
-                dtPolyRef startPoly;
-                float nearestPos[3];
+                // Massive increase to the Y-axis extent so it can reach down to the actual NavMesh
+                float polyPickExt[3] = { 5.0f, 100.0f, 5.0f };
+                dtPolyRef startPoly = 0;
+
+                // Initialize fallback correctly
+                float nearestPos[3] = { selectedSpawn.x, selectedSpawn.y, selectedSpawn.z };
+
                 simQuery->findNearestPoly(&selectedSpawn.x, polyPickExt, world.getCrowd()->getFilter(0), &startPoly, nearestPos);
+
+                if (startPoly == 0)
+                {
+                    std::cout << "[SPAWN DEBUG] WARNING: startPoly is STILL 0! Even with 100f extents near "
+                        << selectedSpawn.x << ", " << selectedSpawn.y << ", " << selectedSpawn.z << "\n";
+                }
 
                 Vector3 finalSpawn = { nearestPos[0], nearestPos[1], nearestPos[2] };
 
@@ -225,14 +234,22 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
 
                         // Enable obstacle avoidance and separation between agents
                         params.updateFlags = DT_CROWD_OBSTACLE_AVOIDANCE | DT_CROWD_SEPARATION;
-                        params.obstacleAvoidanceType = 3; // Use high-quality avoidance params
-                        params.userData = &aiComp;
+                        params.obstacleAvoidanceType = 3;
+
+                        // Store the actual Entity ID inside the void pointer
+                        params.userData = (void*)(uintptr_t)entity;
 
                         float spawnPos[3] = { finalSpawn.x, finalSpawn.y, finalSpawn.z };
                         int agentIdx = crowd->addAgent(spawnPos, &params);
 
                         if (agentIdx != -1)
+                        {
                             components.ai[entity].crowdAgentIndex = agentIdx;
+                        }
+                        else
+                        {
+                            std::cout << "[SPAWN DEBUG] crowd->addAgent returned -1 for Entity " << entity << "!\n";
+                        }
                     }
 
                     // Prepare the network message to inform clients of the new entity
@@ -261,7 +278,6 @@ void RequestCreateEntityMessage::process(const sockaddr_in& senderAddr, SOCKET t
                     {
                         if (p.tcpSocket != INVALID_SOCKET)
                         {
-                            // We ONLY send it once per client per entity created in this block
                             server->SendReliable(p.tcpSocket, buffer);
                         }
                     }

@@ -18,6 +18,7 @@
 #include <DetourCommon.h>
 #include <stdlib.h> 
 #include <chrono>
+#include <iostream>
 
 void AISystem::Update(ComponentManager& components, float deltaTime)
 {
@@ -147,7 +148,13 @@ void AISystem::Update(ComponentManager& components, float deltaTime)
                             if (agent->targetState != DT_CROWDAGENT_TARGET_VALID || distToCurrentTargetSq > UPDATE_THRESHOLD_SQ)
                             {
                                 ai.targetPosition = targetPos;
-                                crowd->requestMoveTarget(ai.crowdAgentIndex, targetRef, nearestPt);
+                                bool requestSuccess = crowd->requestMoveTarget(ai.crowdAgentIndex, targetRef, nearestPt);
+
+                                if (!requestSuccess)
+                                {
+                                    std::cout << "[AI DEBUG] requestMoveTarget failed for Entity " << entity
+                                        << " to TargetRef " << targetRef << "\n";
+                                }
                             }
                         }
                     }
