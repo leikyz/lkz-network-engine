@@ -2,6 +2,7 @@
 #include <cstdlib> 
 #include <ctime>   
 #include <LKZ/Core/ECS/Manager/EntityManager.h>
+#include <iostream>
 
 ZombieHitMessage::ZombieHitMessage() {};
 
@@ -52,6 +53,7 @@ void ZombieHitMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 
     for (const auto& player : session->players)
     {
+		std::cout << "Sending ZombieHitMessage to player with" << std::endl;
         Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), getClassName());
 
     }

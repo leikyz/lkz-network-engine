@@ -3,7 +3,7 @@
 #include <LKZ/Protocol/Message/Profiler/ProfilerClientCreatedMessage.h>
 #include <iostream>
 #include <LKZ/Core/ECS/Manager/EntityManager.h>
-
+#include "DetourCrowd.h"
 DeleteAllEntitiesMessage::DeleteAllEntitiesMessage() {}
 
 uint8_t DeleteAllEntitiesMessage::getId() const
@@ -13,6 +13,7 @@ uint8_t DeleteAllEntitiesMessage::getId() const
 
 std::vector<uint8_t>& DeleteAllEntitiesMessage::serialize(Serializer& serializer) const
 {
+    serializer.writeUInt16(3);
     serializer.writeByte(ID);
     return serializer.getBuffer();
 }
@@ -25,23 +26,24 @@ void DeleteAllEntitiesMessage::process(const sockaddr_in& senderAddr, SOCKET tcp
 {
     Session* session = SessionManager::GetSessionBySocket(tcpSocket);
 
+    if (session == nullptr)
+    {
+        std::cerr << "Failed to find session for entity deletion." << std::endl;
+        return;
+    }
+
     Serializer serializer;
     serialize(serializer);
 
     for (const auto& player : session->players)
     {
-        Engine::Instance().Server()->Send(player.udpAddr, serializer.getBuffer(), getClassName());
+        if (player.tcpSocket != INVALID_SOCKET)
+        {
+            Engine::Instance().Server()->SendReliable(player.tcpSocket, serializer.getBuffer());
+        }
     }
 
-    if (session != nullptr)
-    {
-        // Batch destroy all Zombies (2) and Primitives (3) for this session
-        EntityManager::Instance().DestroyEntitiesBySession(session);
+    EntityManager::Instance().DestroyEntitiesBySession(session);
 
-        std::cout << "Cleaned up entities" << std::endl;
-    }
-    else
-    {
-        std::cerr << "Failed to find session for entity deletion." << std::endl;
-    }
+    std::cout << "Cleaned up entities and freed simulation slots successfully." << std::endl;
 }

@@ -46,7 +46,7 @@ void PlayerShootingMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSoc
         if (player.tcpSocket == tcpSocket)
             continue; // Skip the sender
 
-		std::cout << "Sending PlayerShootingMessage to player with TCP socket: " << player.tcpSocket << std::endl;  
+/*		std::cout << "Sending PlayerShootingMessage to player with TCP socket: " << player.tcpSocket << std::endl; */ 
 
         Engine::Instance().Server()->SendReliable(player.tcpSocket, serializer.getBuffer());
     }
