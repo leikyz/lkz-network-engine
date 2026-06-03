@@ -1,6 +1,7 @@
 #include "LKZ/Protocol/Message/Entity/Player/PlayerShootingMessage.h"
 #include <LKZ/Core/ECS/Manager/ComponentManager.h>
 #include <LKZ/Core/ECS/Manager/EntityManager.h>
+#include <iostream>
 
 PlayerShootingMessage::PlayerShootingMessage() {}
 
@@ -16,6 +17,7 @@ uint8_t PlayerShootingMessage::getId() const
 
 std::vector<uint8_t>& PlayerShootingMessage::serialize(Serializer& serializer) const
 {
+    serializer.writeUInt16(5);
     serializer.writeByte(ID);
     serializer.writeUInt16(entityId);
 
@@ -29,17 +31,25 @@ void PlayerShootingMessage::deserialize(Deserializer& deserializer)
 
 void PlayerShootingMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 {
-   /* Serializer serializer;
+    Serializer serializer;
     serialize(serializer);
 
-    int sessionId = ClientManager::getClientByAddress(senderAddr)->lobbyId;
-    Session* session = SessionManager::GetSession(sessionId);
+    Session* session = SessionManager::GetSessionBySocket(tcpSocket);
 
-    Engine::Instance().Server()->SendToMultiple(
-        session->clientsAddress,
-        serializer.getBuffer(),
-        getClassName(),
-        &senderAddr);*/
+    if (!session)
+    {
+        return;
+    }
+
+    for (const auto& player : session->players)
+    {
+        if (player.tcpSocket == tcpSocket)
+            continue; // Skip the sender
+
+		std::cout << "Sending PlayerShootingMessage to player with TCP socket: " << player.tcpSocket << std::endl;  
+
+        Engine::Instance().Server()->SendReliable(player.tcpSocket, serializer.getBuffer());
+    }
 }
 
 
