@@ -29,8 +29,7 @@ void EntityManager::DestroyEntitiesBySession(Session* session)
 {
     if (!session) return;
 
-    // Collect IDs first to avoid iterator invalidation while erasing
-    std::vector<Entity> targets;
+    std::lock_guard<std::mutex> lock(m_destructionMutex);
 
     for (auto const& [entity, mappedSession] : m_entitySessionMap)
     {
@@ -40,71 +39,59 @@ void EntityManager::DestroyEntitiesBySession(Session* session)
             // Filter for Zombie or Primitive
             if (type == EntitySuperType::Zombie || type == EntitySuperType::Primitive)
             {
-                targets.push_back(entity);
+                m_pendingDestructions.push_back(entity);
             }
         }
-    }
-
-    // Retrieve Simulation References Internally ---
-    auto& components = ComponentManager::Instance();
-    World& world = Engine::Instance().GetWorld();
-    dtCrowd* crowd = world.getCrowd();
-
-    // Comprehensive simulation, component, and registry cleanup
-    for (Entity entity : targets)
-    {
-        // Remove from DetourCrowd simulation slot
-        if (components.ai.count(entity) > 0)
-        {
-            int agentIndex = components.ai[entity].crowdAgentIndex;
-            if (crowd && agentIndex != -1)
-            {
-                crowd->removeAgent(agentIndex);
-            }
-            components.ai.erase(entity); // Wipe AI component from system loop
-        }
-
-        // Clean up structural spatial components
-        components.positions.erase(entity);
-        components.rotations.erase(entity);
-
-        // Clear internal maps and recycle the ID
-        DestroyEntity(entity);
     }
 }
 
 void EntityManager::DestroyEntity(Entity entity)
 {
-    auto& components = ComponentManager::Instance();
+    std::lock_guard<std::mutex> lock(m_destructionMutex);
+    m_pendingDestructions.push_back(entity);
+}
 
-    // DetourCrowd Simulation Cleanup
-    auto aiIt = components.ai.find(entity);
-    if (aiIt != components.ai.end())
+void EntityManager::ApplyPendingDestructions()
+{
+    std::lock_guard<std::mutex> lock(m_destructionMutex);
+
+    if (m_pendingDestructions.empty()) return;
+
+    auto& components = ComponentManager::Instance();
+    World& world = Engine::Instance().GetWorld();
+    dtCrowd* crowd = world.getCrowd();
+
+    for (Entity entity : m_pendingDestructions)
     {
-        if (aiIt->second.crowdAgentIndex != -1)
+        if (m_entitySessionMap.find(entity) == m_entitySessionMap.end()) continue;
+
+        // DetourCrowd Simulation Cleanup
+        auto aiIt = components.ai.find(entity);
+        if (aiIt != components.ai.end())
         {
-            World& world = Engine::Instance().GetWorld();
-            dtCrowd* crowd = world.getCrowd();
-            if (crowd)
+            if (aiIt->second.crowdAgentIndex != -1)
             {
-                crowd->removeAgent(aiIt->second.crowdAgentIndex);
+                if (crowd)
+                {
+                    crowd->removeAgent(aiIt->second.crowdAgentIndex);
+                }
             }
+            // Safely erase from the AI component map
+            components.ai.erase(aiIt);
         }
-        // Safely erase from the AI component map
-        components.ai.erase(aiIt);
+
+        components.positions.erase(entity);
+        components.rotations.erase(entity);
+        components.playerInputs.erase(entity);
+
+        MetricsManager::Instance().currentMetrics.activeEntityCount--;
+        m_freeIDs.push(entity);
+        m_entitySessionMap.erase(entity);
+        m_entityTypeMap.erase(entity);
+        m_lastSequenceIds.erase(entity);
     }
 
-    // ECS Component Cleanup (Preventing memory leaks across waves)
-    components.positions.erase(entity);
-    components.rotations.erase(entity);
-    components.playerInputs.erase(entity);
-
-    // Tracking and ID Recycler Cleanup
-    MetricsManager::Instance().currentMetrics.activeEntityCount--;
-    m_freeIDs.push(entity);
-    m_entitySessionMap.erase(entity);
-    m_entityTypeMap.erase(entity);
-    m_lastSequenceIds.erase(entity);
+    m_pendingDestructions.clear();
 }
 
 Entity EntityManager::GetEntityById(uint16_t entityId, Session* lobby)

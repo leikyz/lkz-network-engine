@@ -17,6 +17,9 @@ public:
 
     Entity nextID = 1; // start at 1, 0 is invalid
 
+    std::mutex m_destructionMutex;
+    std::vector<Entity> m_pendingDestructions;
+
     void SetLastSequenceId(Entity entity, uint32_t sequenceId);
 
     uint32_t GetLastSequenceId(Entity entity) const;
@@ -29,6 +32,8 @@ public:
 
     void DestroyEntitiesBySession(Session* session);
 
+    void ApplyPendingDestructions();
+
     Entity GetEntityById(uint16_t entityId, Session* lobby);
 
 private:
@@ -40,6 +45,8 @@ private:
 
 	// Delete assignment operator
     EntityManager& operator=(const EntityManager&) = delete;
+
+
 
 	// Maps to track last sequence IDs and entity-lobby associations
     std::unordered_map<Entity, uint32_t> m_lastSequenceIds;

@@ -52,6 +52,7 @@ void EntityDeadMessage::process(const sockaddr_in& senderAddr, SOCKET tcpSocket)
 
     std::cout << "entity destroyed" << std::endl;
 
+
     Serializer serializer;
     serialize(serializer);
 

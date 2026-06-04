@@ -78,6 +78,8 @@ int main()
 
             auto endTime = std::chrono::high_resolution_clock::now();
 
+            EntityManager::Instance().ApplyPendingDestructions();
+
             // Calculate the duration in microseconds
             auto durationUs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 
